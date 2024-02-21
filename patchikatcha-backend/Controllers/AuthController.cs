@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using patchikatcha_backend.DTO;
 using patchikatcha_backend.Repositories;
@@ -22,6 +23,7 @@ namespace patchikatcha_backend.Controllers
         [Route("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto registerDto)
         {
+
             var identityUser = new IdentityUser
             {
                 Email = registerDto.Email,
