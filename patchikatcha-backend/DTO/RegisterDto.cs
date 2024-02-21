@@ -9,7 +9,5 @@ namespace patchikatcha_backend.DTO
 
         [DataType(DataType.Password)]
         public required string Password { get; set; }
-
-        public required string[] Roles { get; set; }
     }
 }

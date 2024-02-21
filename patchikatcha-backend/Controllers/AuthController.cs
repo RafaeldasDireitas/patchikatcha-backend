@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Cors;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using patchikatcha_backend.DTO;
@@ -37,7 +38,7 @@ namespace patchikatcha_backend.Controllers
                 return BadRequest();
             }
 
-            await userManager.AddToRolesAsync(identityUser, registerDto.Roles);
+            await userManager.AddToRolesAsync(identityUser, ["User"]);
 
             return Ok("User registered");
         }
@@ -75,6 +76,25 @@ namespace patchikatcha_backend.Controllers
             };
 
             return Ok(tokenResponse);
+        }
+
+        [HttpPost]
+        [Route("verify-user-role")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> VerifyUserRole(string email)
+        {
+
+            var userEmail = await userManager.FindByEmailAsync(email);
+
+            var isAdmin = await userManager.IsInRoleAsync(userEmail, "Admin");
+
+            if (!isAdmin)
+            {
+                return BadRequest("You don't have access to this page.");
+            }
+
+
+            return Ok("You're verified as Admin");
         }
     }
 }
