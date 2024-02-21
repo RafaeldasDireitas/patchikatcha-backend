@@ -78,7 +78,7 @@ namespace patchikatcha_backend.Controllers
             return Ok(tokenResponse);
         }
 
-        [HttpPost]
+        [HttpGet]
         [Route("verify-user-role")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> VerifyUserRole(string email)
