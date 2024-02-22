@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using patchikatcha_backend.DTO;
 using patchikatcha_backend.Repositories;
+using System.Text.Json;
 
 namespace patchikatcha_backend.Controllers
 {
@@ -96,6 +97,30 @@ namespace patchikatcha_backend.Controllers
 
             return Ok("You're verified as Admin");
         }
+
+        [HttpGet]
+        [Route("grab-email-token")] //this will be used as the email verification token for security reasons
+        public async Task<IActionResult> GrabEmailToken(string email)
+        {
+            var userEmail = await userManager.FindByEmailAsync(email);
+
+            if (userEmail == null)
+            {
+                return BadRequest("User not found");
+            }
+
+            var findToken = userEmail.ConcurrencyStamp;
+
+            if (findToken == null)
+            {
+                return BadRequest("Token not found");
+            }
+
+            var token = JsonSerializer.Serialize(findToken);
+
+            return Ok(token);
+        }
+
     }
 }
 
