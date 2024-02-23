@@ -112,6 +112,7 @@ namespace patchikatcha_backend.Controllers
             }
 
             var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
+            Console.WriteLine(token);
 
             if (token == null)
             {
@@ -125,7 +126,6 @@ namespace patchikatcha_backend.Controllers
         [Route("confirm-email")]
         public async Task<IActionResult> ConfirmEmail(string token, string email)
         {
-
             var user = await userManager.FindByEmailAsync(email);
 
             if (user == null)
@@ -134,6 +134,7 @@ namespace patchikatcha_backend.Controllers
             }
 
             var confirmEmail = await userManager.ConfirmEmailAsync(user, token);
+            Console.WriteLine(confirmEmail);
 
             if (confirmEmail == null)
             {
