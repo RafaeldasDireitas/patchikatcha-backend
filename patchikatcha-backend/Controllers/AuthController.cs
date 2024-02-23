@@ -134,7 +134,6 @@ namespace patchikatcha_backend.Controllers
             }
 
             var confirmEmail = await userManager.ConfirmEmailAsync(user, token);
-            Console.WriteLine(confirmEmail);
 
             if (confirmEmail == null)
             {
