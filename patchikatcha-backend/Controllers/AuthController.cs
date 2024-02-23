@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using patchikatcha_backend.DTO;
 using patchikatcha_backend.Repositories;
 using System.Text.Json;
@@ -102,23 +103,34 @@ namespace patchikatcha_backend.Controllers
         [Route("grab-email-token")] //this will be used as the email verification token for security reasons
         public async Task<IActionResult> GrabEmailToken(string email)
         {
-            var userEmail = await userManager.FindByEmailAsync(email);
+            var user = await userManager.FindByEmailAsync(email);
 
-            if (userEmail == null)
+            if (user == null)
             {
-                return BadRequest("User not found");
+                return BadRequest("No user found");
             }
 
-            var findToken = userEmail.ConcurrencyStamp;
+            var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
 
-            if (findToken == null)
+            if (token == null)
             {
-                return BadRequest("Token not found");
+                return BadRequest("No token was generated");
             }
 
-            var token = JsonSerializer.Serialize(findToken);
+            var serializedToken = JsonSerializer.Serialize(token);
 
-            return Ok(token);
+            return Ok(serializedToken);
+        }
+
+        [HttpGet]
+        [Route("verify-email")]
+        public async Task<IActionResult> VerifyEmail(string token)
+        {
+            var findUserByToken = await userManager.Users.FirstOrDefaultAsync(u => u.SecurityStamp == token);
+            var confirmEmail = await userManager.FindByEmailAsync("ah");
+
+
+            return Ok("Email verified");
         }
 
     }
