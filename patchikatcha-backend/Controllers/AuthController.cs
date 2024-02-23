@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using patchikatcha_backend.DTO;
 using patchikatcha_backend.Repositories;
 using System.Text.Json;
+using System.Web;
 
 namespace patchikatcha_backend.Controllers
 {
@@ -117,20 +118,35 @@ namespace patchikatcha_backend.Controllers
                 return BadRequest("No token was generated");
             }
 
-            var serializedToken = JsonSerializer.Serialize(token);
-
-            return Ok(serializedToken);
+            return Content(token, "text/plain");
         }
 
-        [HttpGet]
-        [Route("verify-email")]
-        public async Task<IActionResult> VerifyEmail(string token)
+        [HttpPut]
+        [Route("confirm-email")]
+        public async Task<IActionResult> ConfirmEmail(string token, string email)
         {
-            var findUserByToken = await userManager.Users.FirstOrDefaultAsync(u => u.SecurityStamp == token);
-            var confirmEmail = await userManager.FindByEmailAsync("ah");
 
+            var user = await userManager.FindByEmailAsync(email);
 
-            return Ok("Email verified");
+            if (user == null)
+            {
+                return BadRequest("No user found");
+            }
+
+            var confirmEmail = await userManager.ConfirmEmailAsync(user, token);
+
+            if (confirmEmail == null)
+            {
+                return BadRequest("Email wasn't confirmed");
+            }
+
+            if (confirmEmail.Succeeded)
+            {
+                return Ok("Email verified");
+            } else
+            {
+                return BadRequest("Email confirmation failed");
+            }
         }
 
     }
