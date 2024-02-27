@@ -112,7 +112,6 @@ namespace patchikatcha_backend.Controllers
             }
 
             var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
-            Console.WriteLine(token);
 
             if (token == null)
             {
