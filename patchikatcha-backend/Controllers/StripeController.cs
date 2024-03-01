@@ -42,8 +42,9 @@ namespace patchikatcha_backend.Controllers
                   {
                     // Provide the exact Price ID (for example, pr_1234) of the product you want to sell
                     Price = "price_1OpAbDLwv2BbZpNwoLtI9FU6",
-                    Quantity = 1,
+                    Quantity = 2,
                   },
+                  
                 },
                 Mode = "payment",
                 ReturnUrl = domain
