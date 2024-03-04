@@ -10,11 +10,6 @@ using Microsoft.Extensions.Hosting;
 using Stripe;
 using Stripe.Checkout;
 
-public class StripeOptions
-{
-    public string option { get; set; }
-}
-
 namespace patchikatcha_backend.Controllers
 {
     [Route("api/[controller]")]
@@ -30,11 +25,12 @@ namespace patchikatcha_backend.Controllers
 
         [HttpPost]
         [Route("create-checkout-session")]
-        public ActionResult Create()
+        public ActionResult Create(string userEmail)
         {
             var domain = "http://localhost:3000";
             var options = new SessionCreateOptions
             {
+                CustomerEmail = userEmail,
                 UiMode = "embedded",
                 LineItems = new List<SessionLineItemOptions>
                 {
@@ -55,8 +51,6 @@ namespace patchikatcha_backend.Controllers
             string clientSecret = session.ClientSecret;
 
             var clientJson = JsonSerializer.Serialize(clientSecret);
-
-
 
             return Content(clientJson, "application/json");
         }
