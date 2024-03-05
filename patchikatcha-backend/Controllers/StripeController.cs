@@ -26,7 +26,7 @@ namespace patchikatcha_backend.Controllers
 
         [HttpPost]
         [Route("create-checkout-session")]
-        public ActionResult Create(string userEmail)
+        public ActionResult Create(string userEmail, [FromBody] CartDto[] checkoutObject)
         {
             var domain = "http://localhost:3000";
             var options = new SessionCreateOptions
@@ -35,17 +35,20 @@ namespace patchikatcha_backend.Controllers
                 UiMode = "embedded",
                 LineItems = new List<SessionLineItemOptions>
                 {
-                  new SessionLineItemOptions
-                  {
-                    // Provide the exact Price ID (for example, pr_1234) of the product you want to sell
-                    Price = "price_1OpAbDLwv2BbZpNwoLtI9FU6",
-                    Quantity = 2,
-                  },
-                  
+                   
                 },
                 Mode = "payment",
                 ReturnUrl = domain
             };
+
+            foreach (var item in checkoutObject)
+            {
+               options.LineItems.Add(new SessionLineItemOptions
+               {
+                  Price = item.PriceId,
+                   Quantity = item.Quantity
+               });
+            }
 
             var service = new SessionService();
             Session session = service.Create(options);
