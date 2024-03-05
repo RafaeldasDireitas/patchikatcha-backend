@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using patchikatcha_backend.DTO;
 using Stripe;
 using Stripe.Checkout;
 
@@ -83,6 +84,28 @@ namespace patchikatcha_backend.Controllers
             var jsonObject = JsonSerializer.Serialize(sessionJson);
 
             return Ok(jsonObject);
+        }
+
+        [HttpGet]
+        [Route("grab-price-id")]
+        public IActionResult GrabPriceId(string productId)
+        {
+           var priceService = new PriceService();
+
+            var options = new PriceListOptions
+            {
+                LookupKeys = new List<string> { productId }
+            };
+
+            var productPrice = priceService.List(options);
+            var priceId = productPrice.First().Id;
+
+            if (productPrice == null)
+            {
+                return BadRequest("No product found");
+            }
+
+            return Ok(priceId);
         }
     }
 }
