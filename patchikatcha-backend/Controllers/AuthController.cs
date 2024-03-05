@@ -101,7 +101,7 @@ namespace patchikatcha_backend.Controllers
         }
 
         [HttpGet]
-        [Route("grab-email-token")] //this will be used as the email verification token for security reasons
+        [Route("grab-email-token")]
         public async Task<IActionResult> GrabEmailToken(string email)
         {
             var user = await userManager.FindByEmailAsync(email);
@@ -146,6 +146,27 @@ namespace patchikatcha_backend.Controllers
             {
                 return BadRequest("Email confirmation failed");
             }
+        }
+
+        [HttpGet]
+        [Route("is-email-confirmed")]
+        public async Task<IActionResult> IsEmailConfirmed(string email)
+        {
+            var userEmail = await userManager.FindByEmailAsync(email);
+
+            if (userEmail == null)
+            {
+                return BadRequest("No email was found");
+            }
+
+            var confirmEmail = await userManager.IsEmailConfirmedAsync(userEmail);
+
+            if (!confirmEmail)
+            {
+                return BadRequest("Your email isn't confirmed!");
+            }
+
+            return Ok("Email is confirmed");
         }
 
     }
