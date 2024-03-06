@@ -28,17 +28,30 @@ namespace patchikatcha_backend.Controllers
         [Route("create-checkout-session")]
         public ActionResult Create(string userEmail, [FromBody] CartDto[] checkoutObject)
         {
-            var domain = "http://localhost:3000";
+            var domain = "http://localhost:3000/checkout/order-successful";
             var options = new SessionCreateOptions
             {
                 CustomerEmail = userEmail,
                 UiMode = "embedded",
                 LineItems = new List<SessionLineItemOptions>
                 {
-                   
+
                 },
                 Mode = "payment",
-                ReturnUrl = domain
+                ReturnUrl = domain,
+                BillingAddressCollection = "required",
+                ShippingAddressCollection = new SessionShippingAddressCollectionOptions
+                {
+                    AllowedCountries = new List<string> { "US", "CA"}
+                },
+                ShippingOptions = new List<SessionShippingOptionOptions>
+                {
+                    new SessionShippingOptionOptions
+                    {
+                        ShippingRate = "shr_1Or81ZLwv2BbZpNwAZArxHdb",
+                    }
+                }
+
             };
 
             foreach (var item in checkoutObject)
@@ -46,7 +59,7 @@ namespace patchikatcha_backend.Controllers
                options.LineItems.Add(new SessionLineItemOptions
                {
                   Price = item.PriceId,
-                   Quantity = item.Quantity
+                  Quantity = item.Quantity
                });
             }
 
