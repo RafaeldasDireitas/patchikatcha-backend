@@ -1,5 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.Metrics;
+using System.Drawing;
 using System.Reflection.Metadata;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.AspNetCore;
@@ -13,6 +16,7 @@ using Newtonsoft.Json.Linq;
 using patchikatcha_backend.DTO;
 using Stripe;
 using Stripe.Checkout;
+using Stripe.Climate;
 
 namespace patchikatcha_backend.Controllers
 {
@@ -20,11 +24,15 @@ namespace patchikatcha_backend.Controllers
     [ApiController]
     public class StripeController : ControllerBase
     {
-        public StripeController()
+        private readonly HttpClient client;
+        private readonly IConfiguration configuration;
+
+        public StripeController(HttpClient client, IConfiguration configuration)
         {
 
             StripeConfiguration.ApiKey = "sk_test_51Onkz6Lwv2BbZpNwYDF8RzBVcmiQAZ59EeoWeBEYD3WJTRmhakFtyUR1tAJcCp4Vrr9mKhxzJARNA0rEPyfyofWV00cISXaGE8";
-
+            this.client = client;
+            this.configuration = configuration;
         }
 
         [HttpPost]
@@ -35,18 +43,16 @@ namespace patchikatcha_backend.Controllers
             var options = new SessionCreateOptions
             {
                 CustomerEmail = userEmail,
-                
+
                 UiMode = "embedded",
-                LineItems = new List<SessionLineItemOptions>
-                {
-                    
-                },
+                LineItems = new List<SessionLineItemOptions>(),
+                Metadata = new Dictionary<string, string>(),
                 Mode = "payment",
                 ReturnUrl = domain,
                 BillingAddressCollection = "required",
                 ShippingAddressCollection = new SessionShippingAddressCollectionOptions
                 {
-                    AllowedCountries = new List<string> { "US", "CA"}
+                    AllowedCountries = new List<string> { "US", "CA", "PT"}
                 },
                 ShippingOptions = new List<SessionShippingOptionOptions>
                 {
@@ -60,14 +66,26 @@ namespace patchikatcha_backend.Controllers
 
             foreach (var item in checkoutObject)
             {
+                Console.WriteLine(item.ProductId);
+                Console.WriteLine(item.VariantId);
+
                 options.LineItems.Add(new SessionLineItemOptions
                 {
                     Price = item.PriceId,
                     Quantity = item.Quantity,
 
                 });
+
+                var metadataKey = item.ProductId;
+
+               options.Metadata.Add(metadataKey, item.VariantId.ToString());
             }
 
+            foreach (var item in options.Metadata)
+            {
+                Console.WriteLine(item.Key);
+                Console.WriteLine(item.Value);
+            }
 
             var service = new SessionService();
             Session session = service.Create(options);
@@ -135,6 +153,10 @@ namespace patchikatcha_backend.Controllers
         public async Task<IActionResult> WebhookPaymentCollected()
         {
             const string endpointSecret = "whsec_34670d831291649de50799b6d4a8d94cb1a4610fcc6f211436c25a53e2ad1947";
+            var apiKey = configuration["PRINTIFY_API"];
+            var shopId = configuration["PRINTIFY_SHOP_ID"];
+
+            client.DefaultRequestHeaders.Add("Authorization", apiKey);
 
             var json = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
 
@@ -148,26 +170,67 @@ namespace patchikatcha_backend.Controllers
                 {
                     if (stripeEvent.Data is EventData eventData)
                     {
-                        // Check if eventData.Object is of type Stripe.Checkout.Session
-                        if (eventData.Object is Session session)
-                        {
-                            // Access the id property of the session
-                            string sessionId = session.Id;
+                        var session = eventData.Object as Session;
+                        string sessionId = session.Id;
 
                             // Make an additional API call to retrieve the expanded Checkout Session object
-                            var options = new SessionGetOptions { Expand = new List<string> { "line_items" } };
-                            var service = new SessionService();
-                            var checkoutSession = service.Get(sessionId, options);
+                        var options = new SessionGetOptions { Expand = new List<string> { "line_items" } };
+                        var service = new SessionService();
+                        var checkoutSession = service.Get(sessionId, options);
 
                             // Access the line_items property from the expanded Checkout Session object
-                            var lineItems = checkoutSession.LineItems.Data;
+                        var lineItems = checkoutSession.LineItems.Data;
+                        var shippingDetails = checkoutSession.ShippingDetails;
+                        var metaData = checkoutSession.Metadata;
 
-                            foreach (var item in lineItems)
+                        var printifyOrder = new PrintifyOrderCreateDto()
+                        {
+                            external_id = Guid.NewGuid().ToString(),
+                            label = "testOrder123",
+                            line_items = new List<line_items>(),
+                            shipping_method = 1,
+                            is_printify_express = false,
+                            send_shipping_notification = false,
+                            address_to = new address_to()
                             {
-                                Console.WriteLine($"Description: {item.Object} {item.Description}, Quantity: {item.Quantity}, ProductId: {item.Id}");
+                                first_name = shippingDetails.Name,
+                                last_name = shippingDetails.Name,
+                                email = checkoutSession.CustomerEmail,
+                                phone = "",
+                                country = shippingDetails.Address.Country,
+                                region = "",
+                                address1 = shippingDetails.Address.Line1,
+                                address2 = shippingDetails.Address.Line2,
+                                city = shippingDetails.Address.State,
+                                zip = shippingDetails.Address.PostalCode
                             }
 
+                        };
+
+                        var metaDataEnumerator = metaData.GetEnumerator();
+                        foreach (var item in lineItems)
+                        {
+                            // Move to the next metadata entry
+                            metaDataEnumerator.MoveNext();
+
+                            // Get the metadata key-value pair for the current line item
+                            var kv = metaDataEnumerator.Current;
+
+                            var lineItem = new line_items()
+                            {
+                                product_id = kv.Key,
+                                variant_id = Convert.ToInt32(kv.Value),
+                                quantity = (int)item.Quantity,
+                            };
+
+                            printifyOrder.line_items.Add(lineItem);
                         }
+
+                        var url = $"https://api.printify.com/v1/shops/{shopId}/orders.json";
+                        var jsonOrder = JsonSerializer.Serialize(printifyOrder);
+                        var content = new StringContent(jsonOrder, Encoding.UTF8, "application/json");
+                        HttpResponseMessage response = await client.PostAsync(url, content);
+
                     }
                 }
                 // ... handle other event types
