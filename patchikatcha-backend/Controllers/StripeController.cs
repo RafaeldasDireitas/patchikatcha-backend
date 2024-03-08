@@ -43,16 +43,16 @@ namespace patchikatcha_backend.Controllers
             var options = new SessionCreateOptions
             {
                 CustomerEmail = userEmail,
-
                 UiMode = "embedded",
                 LineItems = new List<SessionLineItemOptions>(),
                 Metadata = new Dictionary<string, string>(),
                 Mode = "payment",
                 ReturnUrl = domain,
+                Locale = "auto",
                 BillingAddressCollection = "required",
                 ShippingAddressCollection = new SessionShippingAddressCollectionOptions
                 {
-                    AllowedCountries = new List<string> { "US", "CA", "PT"}
+                    AllowedCountries = new List<string> { "US", "CA", "PT", "DE"}
                 },
                 ShippingOptions = new List<SessionShippingOptionOptions>
                 {
@@ -61,6 +61,7 @@ namespace patchikatcha_backend.Controllers
                         ShippingRate = "shr_1Or81ZLwv2BbZpNwAZArxHdb",
                     }
                 },
+                
 
             };
 
@@ -182,26 +183,34 @@ namespace patchikatcha_backend.Controllers
                         var lineItems = checkoutSession.LineItems.Data;
                         var shippingDetails = checkoutSession.ShippingDetails;
                         var metaData = checkoutSession.Metadata;
+                        string fullName = shippingDetails.Name;
+                        string firstName;
+                        string lastName;
+
+                        fullName = fullName.Trim();
+                        string[] nameArray = fullName.Split(' ');
+                        firstName = nameArray[0];
+                        lastName = nameArray.Length == 1 ? firstName : nameArray[^1];
 
                         var printifyOrder = new PrintifyOrderCreateDto()
                         {
                             external_id = Guid.NewGuid().ToString(),
-                            label = "testOrder123",
+                            label = "Order-" + Guid.NewGuid().ToString(), //add 2 guids and grab only 3 chars of each
                             line_items = new List<line_items>(),
                             shipping_method = 1,
                             is_printify_express = false,
                             send_shipping_notification = false,
                             address_to = new address_to()
                             {
-                                first_name = shippingDetails.Name,
-                                last_name = shippingDetails.Name,
+                                first_name = firstName,
+                                last_name = lastName,
                                 email = checkoutSession.CustomerEmail,
                                 phone = "",
                                 country = shippingDetails.Address.Country,
-                                region = "",
+                                region = shippingDetails.Address.City,
                                 address1 = shippingDetails.Address.Line1,
                                 address2 = shippingDetails.Address.Line2,
-                                city = shippingDetails.Address.State,
+                                city = shippingDetails.Address.City,
                                 zip = shippingDetails.Address.PostalCode
                             }
 
