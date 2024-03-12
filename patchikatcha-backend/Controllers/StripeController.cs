@@ -13,6 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Linq;
+using patchikatcha_backend.Data;
 using patchikatcha_backend.DTO;
 using Stripe;
 using Stripe.Checkout;
@@ -26,13 +27,15 @@ namespace patchikatcha_backend.Controllers
     {
         private readonly HttpClient client;
         private readonly IConfiguration configuration;
+        private readonly PatchiContext patchiContext;
 
-        public StripeController(HttpClient client, IConfiguration configuration)
+        public StripeController(HttpClient client, IConfiguration configuration, PatchiContext patchiContext)
         {
 
             StripeConfiguration.ApiKey = "sk_test_51Onkz6Lwv2BbZpNwYDF8RzBVcmiQAZ59EeoWeBEYD3WJTRmhakFtyUR1tAJcCp4Vrr9mKhxzJARNA0rEPyfyofWV00cISXaGE8";
             this.client = client;
             this.configuration = configuration;
+            this.patchiContext = patchiContext;
         }
 
         [HttpPost]
@@ -77,7 +80,7 @@ namespace patchikatcha_backend.Controllers
 
                 });
 
-                var metadataKey = item.ProductId;
+                var metadataKey = item.VariantId.ToString();
 
                options.Metadata.Add(metadataKey, item.VariantId.ToString());
             }
@@ -227,7 +230,7 @@ namespace patchikatcha_backend.Controllers
 
                             var lineItem = new line_items()
                             {
-                                product_id = kv.Key,
+                                product_id = item.Price.LookupKey,
                                 variant_id = Convert.ToInt32(kv.Value),
                                 quantity = (int)item.Quantity,
                             };
