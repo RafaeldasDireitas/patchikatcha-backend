@@ -105,6 +105,7 @@ namespace patchikatcha_backend.Controllers
 
         [HttpGet]
         [Route("grab-user-orders")]
+        [Authorize]
         public async Task<IActionResult> GrabUserOrders(string orderId)
         {
             var apiKey = configuration["PRINTIFY_API"];
@@ -115,7 +116,7 @@ namespace patchikatcha_backend.Controllers
             var url = $"https://api.printify.com/v1/shops/{shopId}/orders/{orderId}.json";
 
             HttpResponseMessage response = await client.GetAsync(url);
-            var data = response.Content.ReadAsStringAsync();
+            var data = await response.Content.ReadAsStringAsync();
 
             return Ok(data);
         }

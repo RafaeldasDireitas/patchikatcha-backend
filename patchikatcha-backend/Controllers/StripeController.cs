@@ -198,11 +198,14 @@ namespace patchikatcha_backend.Controllers
                         lastName = nameArray.Length == 1 ? firstName : nameArray[^1];
 
                         string externalId = Guid.NewGuid().ToString();
+                        string label1 = Guid.NewGuid().ToString().Substring(0, 3);
+                        string label2 = Guid.NewGuid().ToString().Substring(0, 2);
+                        string labelName = label1 + label2;
 
                         var printifyOrder = new PrintifyOrderCreateDto()
                         {
                             external_id = externalId,
-                            label = "Order-for-epic-hehe", //add 2 guids and grab only 3 chars of each
+                            label = "Order-" + labelName, //add 2 guids and grab only 3 chars of each
                             line_items = new List<line_items>(),
                             shipping_method = 1,
                             is_printify_express = false,
