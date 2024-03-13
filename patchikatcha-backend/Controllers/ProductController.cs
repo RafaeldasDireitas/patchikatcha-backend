@@ -102,5 +102,22 @@ namespace patchikatcha_backend.Controllers
 
             return Ok("Product published");
         }
+
+        [HttpGet]
+        [Route("grab-user-orders")]
+        public async Task<IActionResult> GrabUserOrders(string orderId)
+        {
+            var apiKey = configuration["PRINTIFY_API"];
+            var shopId = configuration["PRINTIFY_SHOP_ID"];
+
+            client.DefaultRequestHeaders.Add("Authorization", apiKey);
+
+            var url = $"https://api.printify.com/v1/shops/{shopId}/orders/{orderId}.json";
+
+            HttpResponseMessage response = await client.GetAsync(url);
+            var data = response.Content.ReadAsStringAsync();
+
+            return Ok(data);
+        }
     }
 }

@@ -15,6 +15,7 @@ using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Linq;
 using patchikatcha_backend.Data;
 using patchikatcha_backend.DTO;
+using patchikatcha_backend.Models;
 using Stripe;
 using Stripe.Checkout;
 using Stripe.Climate;
@@ -186,6 +187,7 @@ namespace patchikatcha_backend.Controllers
                         var lineItems = checkoutSession.LineItems.Data;
                         var shippingDetails = checkoutSession.ShippingDetails;
                         var metaData = checkoutSession.Metadata;
+                        var userEmail = checkoutSession.CustomerEmail;
                         string fullName = shippingDetails.Name;
                         string firstName;
                         string lastName;
@@ -195,10 +197,12 @@ namespace patchikatcha_backend.Controllers
                         firstName = nameArray[0];
                         lastName = nameArray.Length == 1 ? firstName : nameArray[^1];
 
+                        string externalId = Guid.NewGuid().ToString();
+
                         var printifyOrder = new PrintifyOrderCreateDto()
                         {
-                            external_id = Guid.NewGuid().ToString(),
-                            label = "Order-" + Guid.NewGuid().ToString(), //add 2 guids and grab only 3 chars of each
+                            external_id = externalId,
+                            label = "Order-for-epic-hehe", //add 2 guids and grab only 3 chars of each
                             line_items = new List<line_items>(),
                             shipping_method = 1,
                             is_printify_express = false,
@@ -242,6 +246,22 @@ namespace patchikatcha_backend.Controllers
                         var jsonOrder = JsonSerializer.Serialize(printifyOrder);
                         var content = new StringContent(jsonOrder, Encoding.UTF8, "application/json");
                         HttpResponseMessage response = await client.PostAsync(url, content);
+                        string responseContent = await response.Content.ReadAsStringAsync();
+                        JsonDocument doc = JsonDocument.Parse(responseContent);
+                        JsonElement root = doc.RootElement;
+                        string orderId = root.GetProperty("id").GetString();
+
+                        if (response.IsSuccessStatusCode)
+                        {
+                            var order = new Models.Order()
+                            {
+                                OrderId = orderId,
+                                UserEmail = userEmail,
+                            };
+
+                            var createOrder = await patchiContext.AddAsync(order);
+                            await patchiContext.SaveChangesAsync();
+                        }
 
                     }
                 }
