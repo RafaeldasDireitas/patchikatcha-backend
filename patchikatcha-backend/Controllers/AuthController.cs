@@ -169,6 +169,23 @@ namespace patchikatcha_backend.Controllers
             return Ok("Email is confirmed");
         }
 
+        [HttpGet]
+        [Route("grab-password-token")]
+        public async Task<IActionResult> ChangePassword(string userEmail)
+        {
+            var findUser = await userManager.FindByEmailAsync(userEmail);
+
+            if (findUser == null)
+            {
+                return BadRequest("No user found");
+            }
+
+            var passwordToken = await userManager.GeneratePasswordResetTokenAsync(findUser);
+
+
+            return Ok(passwordToken);
+        }
+
     }
 }
 
