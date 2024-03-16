@@ -171,7 +171,7 @@ namespace patchikatcha_backend.Controllers
 
         [HttpGet]
         [Route("grab-password-token")]
-        public async Task<IActionResult> ChangePassword(string userEmail)
+        public async Task<IActionResult> GrabPasswordToken(string userEmail)
         {
             var findUser = await userManager.FindByEmailAsync(userEmail);
 
@@ -184,6 +184,28 @@ namespace patchikatcha_backend.Controllers
 
 
             return Ok(passwordToken);
+        }
+
+        [HttpPut]
+        [Route("change-password")]
+        public async Task<IActionResult> ChangePassword([FromBody] string userEmail, string token, string password)
+        {
+            var findUser = await userManager.FindByEmailAsync(userEmail);
+
+            if (findUser == null)
+            {
+                return BadRequest("No user found");
+            }
+
+            var changePassword = await userManager.ResetPasswordAsync(findUser, token, password);
+
+            if (changePassword == null)
+            {
+                return BadRequest("Unable to change password");
+            }
+
+
+            return Ok(changePassword);
         }
 
     }
