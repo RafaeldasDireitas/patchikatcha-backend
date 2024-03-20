@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using patchikatcha_backend.Data;
 using patchikatcha_backend.DTO;
 
@@ -13,18 +14,25 @@ namespace patchikatcha_backend.Controllers
         private readonly HttpClient client;
         private readonly IConfiguration configuration;
         private readonly PatchiContext patchiContext;
+        private readonly IMemoryCache memoryCache;
 
-        public OrderController(HttpClient client, IConfiguration configuration, PatchiContext patchiContext)
+        public OrderController(HttpClient client, IConfiguration configuration, IMemoryCache memoryCache, PatchiContext patchiContext)
         {
             this.client = client;
             this.configuration = configuration;
             this.patchiContext = patchiContext;
+            this.memoryCache = memoryCache;
         }
 
         [HttpGet]
         [Route("grab-orders-id")]
         public async Task<IActionResult> GrabOrdersId(string userEmail)
         {
+            if (memoryCache.TryGetValue(userEmail, out List<GrabUserOrdersDto> cachedResponse))
+            {
+                return Ok(cachedResponse);
+            }
+
             var findOrders = patchiContext.Orders.Where(email => email.UserEmail == userEmail).ToArray();
 
             if (findOrders == null)
@@ -38,6 +46,8 @@ namespace patchikatcha_backend.Controllers
             {
                 idList.Add(new GrabUserOrdersDto { OrderId = item.OrderId});
             }
+
+            memoryCache.Set(userEmail, idList, TimeSpan.FromMinutes(30));
 
             return Ok(idList);
         }
