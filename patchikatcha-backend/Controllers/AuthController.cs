@@ -188,22 +188,22 @@ namespace patchikatcha_backend.Controllers
 
         [HttpPut]
         [Route("change-password")]
-        public async Task<IActionResult> ChangePassword([FromBody] string userEmail, string token, string password)
+        public async Task<IActionResult> ChangePassword([FromBody] PasswordChangerDto passwordChanger)
         {
-            var findUser = await userManager.FindByEmailAsync(userEmail);
+
+            var findUser = await userManager.FindByEmailAsync(passwordChanger.userEmail);
 
             if (findUser == null)
             {
                 return BadRequest("No user found");
             }
 
-            var changePassword = await userManager.ResetPasswordAsync(findUser, token, password);
+            var changePassword = await userManager.ResetPasswordAsync(findUser, passwordChanger.token, passwordChanger.password);
 
             if (changePassword == null)
             {
                 return BadRequest("Unable to change password");
             }
-
 
             return Ok(changePassword);
         }

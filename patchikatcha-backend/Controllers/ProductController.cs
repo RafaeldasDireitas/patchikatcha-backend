@@ -46,6 +46,24 @@ namespace patchikatcha_backend.Controllers
         }
 
         [HttpGet]
+        [Route("grab-all-products")]
+        public async Task<IActionResult> GrabAllProducts()
+        {
+            var apiKey = configuration["PRINTIFY_API"];
+            var shopId = configuration["PRINTIFY_SHOP_ID"];
+
+            client.DefaultRequestHeaders.Add("Authorization", apiKey);
+
+            string url = $"https://api.printify.com/v1/shops/{shopId}/products.json";
+
+            HttpResponseMessage response = await client.GetAsync(url);
+
+            string jsonResponse = await response.Content.ReadAsStringAsync();
+
+            return Ok(jsonResponse);
+        }
+
+        [HttpGet]
         [Route("grab-product")]
         public async Task<IActionResult> GrabProduct(string productId)
         {
