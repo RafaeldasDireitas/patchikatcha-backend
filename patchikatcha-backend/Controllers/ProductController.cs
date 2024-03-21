@@ -20,6 +20,7 @@ namespace patchikatcha_backend.Controllers
 
         // GET: ProductController
         [HttpGet]
+        [ResponseCache(Duration = 60)]
         [Route("new-products")]
         public async Task<ActionResult> GetNewProducts()
         {

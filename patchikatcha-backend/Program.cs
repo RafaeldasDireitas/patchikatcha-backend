@@ -22,6 +22,7 @@ builder.Services.AddCors(options =>
         });
 });
 builder.Services.AddMemoryCache();
+builder.Services.AddResponseCaching();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
