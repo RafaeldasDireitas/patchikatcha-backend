@@ -71,9 +71,6 @@ namespace patchikatcha_backend.Controllers
 
             foreach (var item in checkoutObject)
             {
-                Console.WriteLine(item.ProductId);
-                Console.WriteLine(item.VariantId);
-
                 options.LineItems.Add(new SessionLineItemOptions
                 {
                     Price = item.PriceId,
@@ -84,12 +81,6 @@ namespace patchikatcha_backend.Controllers
                 var metadataKey = item.VariantId.ToString();
 
                options.Metadata.Add(metadataKey, item.VariantId.ToString());
-            }
-
-            foreach (var item in options.Metadata)
-            {
-                Console.WriteLine(item.Key);
-                Console.WriteLine(item.Value);
             }
 
             var service = new SessionService();
