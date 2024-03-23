@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using System.Text;
 using System.Text.Json;
 
@@ -11,11 +12,13 @@ namespace patchikatcha_backend.Controllers
     {
         private readonly HttpClient client;
         private readonly IConfiguration configuration;
+        public readonly IMemoryCache memoryCache;
 
-        public ProductController(HttpClient client, IConfiguration configuration)
+        public ProductController(HttpClient client, IConfiguration configuration, IMemoryCache memoryCache)
         {
             this.client = client;
             this.configuration = configuration;
+            this.memoryCache = memoryCache;
         }
 
         // GET: ProductController
@@ -26,10 +29,11 @@ namespace patchikatcha_backend.Controllers
         {
             var apiKey = configuration["PRINTIFY_API"];
             var shopId = configuration["PRINTIFY_SHOP_ID"];
+            int limit = 3;
 
             client.DefaultRequestHeaders.Add("Authorization", apiKey);
 
-            string url = $"https://api.printify.com/v1/shops/{shopId}/products.json";
+            string url = $"https://api.printify.com/v1/shops/{shopId}/products.json?limit={limit}";
 
             HttpResponseMessage response = await client.GetAsync(url);
 
@@ -39,27 +43,33 @@ namespace patchikatcha_backend.Controllers
             }
 
             string jsonResponse = await response.Content.ReadAsStringAsync();
-            JsonDocument json = JsonDocument.Parse(jsonResponse);
-            JsonElement data = json.RootElement.GetProperty("data");
-            JsonElement[] slicedData = data.EnumerateArray().Take(3).ToArray();
 
-            return Ok(slicedData);
+            return Ok(jsonResponse);
         }
 
         [HttpGet]
         [Route("grab-all-products")]
-        public async Task<IActionResult> GrabAllProducts()
+        public async Task<IActionResult> GrabAllProducts(int limit,int pageNumber)
         {
+            string cacheKey = $"Product_Key_{pageNumber}";
+
+            if (memoryCache.TryGetValue(cacheKey, out string cachedResponse))
+            {
+                return Ok(cachedResponse);
+            }
+
             var apiKey = configuration["PRINTIFY_API"];
             var shopId = configuration["PRINTIFY_SHOP_ID"];
 
             client.DefaultRequestHeaders.Add("Authorization", apiKey);
 
-            string url = $"https://api.printify.com/v1/shops/{shopId}/products.json";
+            string url = $"https://api.printify.com/v1/shops/{shopId}/products.json?limit={limit}&page={pageNumber}";
 
             HttpResponseMessage response = await client.GetAsync(url);
 
             string jsonResponse = await response.Content.ReadAsStringAsync();
+
+            memoryCache.Set(cacheKey, jsonResponse, TimeSpan.FromMinutes(30));
 
             return Ok(jsonResponse);
         }
