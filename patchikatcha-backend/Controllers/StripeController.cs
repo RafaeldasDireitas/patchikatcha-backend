@@ -62,11 +62,30 @@ namespace patchikatcha_backend.Controllers
                 {
                     new SessionShippingOptionOptions
                     {
-                        ShippingRate = "shr_1Or81ZLwv2BbZpNwAZArxHdb",
-                    }
-                },
-                
-
+                        ShippingRateData = new SessionShippingOptionShippingRateDataOptions
+                        {
+                            Type = "fixed_amount",
+                            FixedAmount = new SessionShippingOptionShippingRateDataFixedAmountOptions {
+                                Amount = 500,
+                                Currency = "eur",
+                            },
+                            DisplayName = "Normal shipping",
+                            DeliveryEstimate = new SessionShippingOptionShippingRateDataDeliveryEstimateOptions
+                            {
+                                Minimum = new SessionShippingOptionShippingRateDataDeliveryEstimateMinimumOptions
+                                {
+                                    Unit = "business_day",
+                                    Value = 5
+                                },
+                                Maximum = new SessionShippingOptionShippingRateDataDeliveryEstimateMaximumOptions
+                                {
+                                    Unit = "business_day",
+                                    Value = 7
+                                },
+                            }
+                        },
+                    },
+                }
             };
 
             foreach (var item in checkoutObject)
