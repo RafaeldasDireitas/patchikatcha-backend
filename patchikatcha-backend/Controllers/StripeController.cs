@@ -56,7 +56,7 @@ namespace patchikatcha_backend.Controllers
                 BillingAddressCollection = "required",
                 ShippingAddressCollection = new SessionShippingAddressCollectionOptions
                 {
-                    AllowedCountries = new List<string> { "US", "CA", "PT", "DE"}
+                    AllowedCountries = new List<string> { $"{checkoutObject[0].Country}"},
                 },
                 ShippingOptions = new List<SessionShippingOptionOptions>
                 {
@@ -105,18 +105,45 @@ namespace patchikatcha_backend.Controllers
             var service = new SessionService();
             Session session = service.Create(options);
             string clientSecret = session.ClientSecret;
+            string clientId = session.Id;
 
-            var clientJson = JsonSerializer.Serialize(clientSecret);
+            var clientData = new
+            {
+                clientSecret = clientSecret,
+                clientId = clientId
+            };
 
-            return Content(clientJson, "application/json");
+            var clientJson = JsonSerializer.Serialize(clientData);
+
+            return Ok(clientJson);
+        }
+
+        [HttpPost]
+        [Route("create-payment-intent")]
+        public ActionResult CreatePaymentIntent([FromBody] string email)
+        {
+            var paymentIntentService = new PaymentIntentService();
+            var paymentIntent = paymentIntentService.Create(new PaymentIntentCreateOptions
+            {
+                Amount = 5000,
+                AutomaticPaymentMethods = new PaymentIntentAutomaticPaymentMethodsOptions
+                {
+                    Enabled = true,
+                },
+                Currency = "eur",
+            });
+
+            string clientSecret = paymentIntent.ClientSecret;
+
+            return Ok(clientSecret);
         }
 
         [HttpGet]
         [Route("session-status")]
         public ActionResult SessionStatus([FromQuery] string sessionId)
         {
-            var sessionSerivce = new SessionService();
-            Session session = sessionSerivce.Get(sessionId);
+            var sessionService = new SessionService();
+            Session session = sessionService.Get(sessionId);
 
             // Check if session is null
             if (session == null)
@@ -133,7 +160,8 @@ namespace patchikatcha_backend.Controllers
             var sessionJson = new
             {
                 status = session.Status,
-                customer_email = session.CustomerDetails.Email
+                customer_email = session.CustomerDetails.Email,
+                shipping_address = session.CustomerDetails.Address
             };
 
             var jsonObject = JsonSerializer.Serialize(sessionJson);

@@ -12,5 +12,6 @@
         public int? Color { get; set; }
         public string ProductId { get; set; }
         public int VariantId { get; set; }
+        public string Country { get; set; }
     }
 }
