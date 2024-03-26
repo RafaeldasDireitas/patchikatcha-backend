@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using patchikatcha_backend.Data;
 using patchikatcha_backend.DTO;
+using patchikatcha_backend.Models;
 using patchikatcha_backend.Repositories;
 using System.Text.Json;
 using System.Web;
@@ -14,13 +16,15 @@ namespace patchikatcha_backend.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly UserManager<IdentityUser> userManager;
+        private readonly UserManager<ApplicationUser> userManager;
         private readonly IToken tokenRepository;
+        private readonly AuthDbContext authDbContext;
 
-        public AuthController(UserManager<IdentityUser> userManager, IToken tokenRepository)
+        public AuthController(UserManager<ApplicationUser> userManager, IToken tokenRepository, AuthDbContext authDbContext)
         {
             this.userManager = userManager;
             this.tokenRepository = tokenRepository;
+            this.authDbContext = authDbContext;
         }
 
         [HttpPost]
@@ -28,20 +32,20 @@ namespace patchikatcha_backend.Controllers
         public async Task<IActionResult> Register([FromBody] RegisterDto registerDto)
         {
 
-            var identityUser = new IdentityUser
+            var applicationUser = new ApplicationUser
             {
                 Email = registerDto.Email,
                 UserName = registerDto.Email,
             };
 
-            var identityResult = await userManager.CreateAsync(identityUser, registerDto.Password);
+            var identityResult = await userManager.CreateAsync(applicationUser, registerDto.Password);
 
             if (!identityResult.Succeeded)
             {
                 return BadRequest();
             }
 
-            await userManager.AddToRolesAsync(identityUser, ["User"]);
+            await userManager.AddToRolesAsync(applicationUser, ["User"]);
 
             return Ok("User registered");
         }
@@ -146,6 +150,18 @@ namespace patchikatcha_backend.Controllers
             {
                 return BadRequest("Email confirmation failed");
             }
+        }
+
+        [HttpPut]
+        [Route("update-user-country")]
+        public async Task<IActionResult> UpdateUserCountry(string userEmail, string newCountry)
+        {
+            var user = await userManager.FindByEmailAsync(userEmail);
+
+            user.UserCountry = newCountry;
+
+            var result = await userManager.UpdateAsync(user);
+            return Ok("Saved");
         }
 
         [HttpGet]

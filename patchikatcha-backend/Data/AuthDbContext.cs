@@ -1,10 +1,11 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using patchikatcha_backend.Models;
 
 namespace patchikatcha_backend.Data;
 
-public class AuthDbContext : IdentityDbContext
+public partial class AuthDbContext : IdentityDbContext<ApplicationUser>
 {
     public AuthDbContext(DbContextOptions<AuthDbContext> options) : base(options)
     {

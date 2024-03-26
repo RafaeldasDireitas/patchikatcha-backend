@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using patchikatcha_backend.Data;
+using patchikatcha_backend.Models;
 using patchikatcha_backend.Repositories;
 
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
@@ -56,7 +57,7 @@ builder.Services.AddSwaggerGen(options =>
 
 builder.Services.AddDbContext<AuthDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("PatchiKatchaConnectionString")));
 builder.Services.AddDbContext<PatchiContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("PatchiKatchaConnectionString")));
-builder.Services.AddIdentityCore<IdentityUser>().AddRoles<IdentityRole>().AddTokenProvider<DataProtectorTokenProvider<IdentityUser>>("PatchiKatcha").AddEntityFrameworkStores<AuthDbContext>().AddDefaultTokenProviders();
+builder.Services.AddIdentityCore<ApplicationUser>().AddRoles<IdentityRole>().AddTokenProvider<DataProtectorTokenProvider<ApplicationUser>>("PatchiKatcha").AddEntityFrameworkStores<AuthDbContext>().AddDefaultTokenProviders();
 builder.Services.Configure<IdentityOptions>(options =>
 {
     options.Password.RequireDigit = false;
