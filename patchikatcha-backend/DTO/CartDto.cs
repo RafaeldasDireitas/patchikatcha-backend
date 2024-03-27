@@ -12,6 +12,13 @@
         public int? Color { get; set; }
         public string ProductId { get; set; }
         public int VariantId { get; set; }
-        public string Country { get; set; }
+        public UserGeo UserGeo { get; set; }
+        
+    }
+
+    public class UserGeo
+    {
+        public string UserCountry { get; set; }
+        public string Currency { get; set; }
     }
 }

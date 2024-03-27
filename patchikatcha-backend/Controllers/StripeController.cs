@@ -56,7 +56,7 @@ namespace patchikatcha_backend.Controllers
                 BillingAddressCollection = "required",
                 ShippingAddressCollection = new SessionShippingAddressCollectionOptions
                 {
-                    AllowedCountries = new List<string> { $"{checkoutObject[0].Country}"},
+                    AllowedCountries = new List<string> { $"{checkoutObject[0].UserGeo.UserCountry}"},
                 },
                 ShippingOptions = new List<SessionShippingOptionOptions>
                 {
@@ -67,7 +67,7 @@ namespace patchikatcha_backend.Controllers
                             Type = "fixed_amount",
                             FixedAmount = new SessionShippingOptionShippingRateDataFixedAmountOptions {
                                 Amount = 500,
-                                Currency = "eur",
+                                Currency = $"{checkoutObject[0].UserGeo.Currency}",
                             },
                             DisplayName = "Normal shipping",
                             DeliveryEstimate = new SessionShippingOptionShippingRateDataDeliveryEstimateOptions
@@ -75,7 +75,7 @@ namespace patchikatcha_backend.Controllers
                                 Minimum = new SessionShippingOptionShippingRateDataDeliveryEstimateMinimumOptions
                                 {
                                     Unit = "business_day",
-                                    Value = 5
+                                    Value = 2
                                 },
                                 Maximum = new SessionShippingOptionShippingRateDataDeliveryEstimateMaximumOptions
                                 {
@@ -116,26 +116,6 @@ namespace patchikatcha_backend.Controllers
             var clientJson = JsonSerializer.Serialize(clientData);
 
             return Ok(clientJson);
-        }
-
-        [HttpPost]
-        [Route("create-payment-intent")]
-        public ActionResult CreatePaymentIntent([FromBody] string email)
-        {
-            var paymentIntentService = new PaymentIntentService();
-            var paymentIntent = paymentIntentService.Create(new PaymentIntentCreateOptions
-            {
-                Amount = 5000,
-                AutomaticPaymentMethods = new PaymentIntentAutomaticPaymentMethodsOptions
-                {
-                    Enabled = true,
-                },
-                Currency = "eur",
-            });
-
-            string clientSecret = paymentIntent.ClientSecret;
-
-            return Ok(clientSecret);
         }
 
         [HttpGet]
