@@ -2,6 +2,7 @@
 {
     public class CartDto
     {
+        public int Index { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
         public float Price { get; set; }
@@ -12,6 +13,8 @@
         public int? Color { get; set; }
         public string ProductId { get; set; }
         public int VariantId { get; set; }
+        public int FirstItem { get; set; }
+        public int AdditionalItems { get; set; }
         public UserGeo UserGeo { get; set; }
         
     }

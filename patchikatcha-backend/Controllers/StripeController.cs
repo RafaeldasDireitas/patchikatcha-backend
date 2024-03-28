@@ -43,6 +43,25 @@ namespace patchikatcha_backend.Controllers
         [Route("create-checkout-session")]
         public ActionResult Create(string userEmail, [FromBody] CartDto[] checkoutObject)
         {
+            int shippingRate = 0;
+
+            foreach (CartDto cart in checkoutObject)
+            {
+                if (cart.Quantity == 1)
+                {
+                    shippingRate = shippingRate + cart.FirstItem;
+                }
+
+                if (cart.Quantity > 1)
+                {
+                    shippingRate = shippingRate + cart.FirstItem;
+                    for (int i = 0; i < cart.Quantity - 1; i++)
+                    {
+                        shippingRate = shippingRate + cart.AdditionalItems;
+                    }
+                }
+            }
+
             var domain = "http://localhost:3000/checkout/order-successful";
             var options = new SessionCreateOptions
             {
@@ -66,10 +85,10 @@ namespace patchikatcha_backend.Controllers
                         {
                             Type = "fixed_amount",
                             FixedAmount = new SessionShippingOptionShippingRateDataFixedAmountOptions {
-                                Amount = 500,
+                                Amount = shippingRate,
                                 Currency = $"{checkoutObject[0].UserGeo.Currency}",
                             },
-                            DisplayName = "Normal shipping",
+                            DisplayName = "Shipping",
                             DeliveryEstimate = new SessionShippingOptionShippingRateDataDeliveryEstimateOptions
                             {
                                 Minimum = new SessionShippingOptionShippingRateDataDeliveryEstimateMinimumOptions
@@ -80,7 +99,7 @@ namespace patchikatcha_backend.Controllers
                                 Maximum = new SessionShippingOptionShippingRateDataDeliveryEstimateMaximumOptions
                                 {
                                     Unit = "business_day",
-                                    Value = 7
+                                    Value = 10
                                 },
                             }
                         },
