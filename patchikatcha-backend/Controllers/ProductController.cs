@@ -78,6 +78,11 @@ namespace patchikatcha_backend.Controllers
         [Route("grab-product")]
         public async Task<IActionResult> GrabProduct(string productId)
         {
+            if (memoryCache.TryGetValue(productId, out string cachedResponse))
+            {
+                return Ok(cachedResponse);
+            }
+
             var apiKey = configuration["PRINTIFY_API"];
             var shopId = configuration["PRINTIFY_SHOP_ID"];
 
@@ -94,6 +99,8 @@ namespace patchikatcha_backend.Controllers
 
             string responseData = await response.Content.ReadAsStringAsync();
             JsonDocument jsonProduct = JsonDocument.Parse(responseData);
+
+            memoryCache.Set(productId, jsonProduct, TimeSpan.FromMinutes(1));
 
             return Ok(jsonProduct);
         }

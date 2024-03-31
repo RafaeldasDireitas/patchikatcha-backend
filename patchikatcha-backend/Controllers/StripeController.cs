@@ -263,7 +263,8 @@ namespace patchikatcha_backend.Controllers
 
                         };
 
-                        var metaDataEnumerator = metaData.GetEnumerator();
+                        var sortedMetadata = metaData.Reverse();
+                        var metaDataEnumerator = sortedMetadata.GetEnumerator();
                         foreach (var item in lineItems)
                         {
                             // Move to the next metadata entry
@@ -272,14 +273,15 @@ namespace patchikatcha_backend.Controllers
                             // Get the metadata key-value pair for the current line item
                             var kv = metaDataEnumerator.Current;
 
-                            var lineItem = new line_items()
-                            {
-                                product_id = item.Price.LookupKey,
-                                variant_id = Convert.ToInt32(kv.Value),
-                                quantity = (int)item.Quantity,
-                            };
+                                var lineItem = new line_items()
+                                {
+                                    product_id = item.Price.LookupKey,
+                                    variant_id = Convert.ToInt32(kv.Value),
+                                    quantity = (int)item.Quantity,
+                                };
 
-                            printifyOrder.line_items.Add(lineItem);
+                                printifyOrder.line_items.Add(lineItem);
+                
                         }
 
                         var url = $"https://api.printify.com/v1/shops/{shopId}/orders.json";
