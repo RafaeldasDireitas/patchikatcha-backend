@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -224,6 +225,14 @@ namespace patchikatcha_backend.Controllers
             return Ok(changePassword);
         }
 
+        [HttpPut]
+        [Route("activate-twoFactor-authentication")]
+        public async Task<IActionResult> ActivateTwoFactorAuthentication(string userEmail)
+        {
+            var user = await userManager.FindByEmailAsync(userEmail);
+
+            return Ok();
+        }
     }
 }
 
