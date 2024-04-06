@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
+using patchikatcha_backend.DTO;
+using System.Collections.Generic;
 using System.Text;
 using System.Text.Json;
 
@@ -45,6 +47,37 @@ namespace patchikatcha_backend.Controllers
             string jsonResponse = await response.Content.ReadAsStringAsync();
 
             return Ok(jsonResponse);
+        }
+
+        [HttpGet]
+        [Route("grab-category-products")]
+        public async Task<IActionResult> GrabCategoryProducts(int limit, int pageNumber, string productTag)
+        {
+            if (memoryCache.TryGetValue(productTag, out ProductCategoryDto products))
+            {
+                return Ok(products);
+            }
+
+            var apiKey = configuration["PRINTIFY_API"];
+            var shopId = configuration["PRINTIFY_SHOP_ID"];
+
+            client.DefaultRequestHeaders.Add("Authorization", apiKey);
+
+            string url = $"https://api.printify.com/v1/shops/{shopId}/products.json?limit={limit}&page={pageNumber}";
+
+            HttpResponseMessage response = await client.GetAsync(url);
+
+            string jsonResponse = await response.Content.ReadAsStringAsync();
+
+            ProductCategoryDto productCategory = JsonSerializer.Deserialize<ProductCategoryDto>(jsonResponse);
+
+            var findProducts = productCategory.Data.Where(product => product.Tags.Contains($"{productTag}")).ToList();
+            var jsonContent = JsonSerializer.Serialize(findProducts);
+
+            memoryCache.Set(productTag, jsonContent, TimeSpan.FromSeconds(60));
+
+            return Ok(jsonContent);
+
         }
 
         [HttpGet]
