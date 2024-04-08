@@ -31,7 +31,7 @@ namespace patchikatcha_backend.Controllers
         {
             var apiKey = configuration["PRINTIFY_API"];
             var shopId = configuration["PRINTIFY_SHOP_ID"];
-            int limit = 3;
+            int limit = 6;
 
             client.DefaultRequestHeaders.Add("Authorization", apiKey);
 
@@ -82,7 +82,7 @@ namespace patchikatcha_backend.Controllers
 
         [HttpGet]
         [Route("grab-all-products")]
-        public async Task<IActionResult> GrabAllProducts(int limit,int pageNumber)
+        public async Task<IActionResult> GrabAllProducts(int limit)
         {
 
             var apiKey = configuration["PRINTIFY_API"];
@@ -90,7 +90,7 @@ namespace patchikatcha_backend.Controllers
 
             client.DefaultRequestHeaders.Add("Authorization", apiKey);
 
-            string url = $"https://api.printify.com/v1/shops/{shopId}/products.json?limit={limit}&page={pageNumber}";
+            string url = $"https://api.printify.com/v1/shops/{shopId}/products.json?limit={limit}";
 
             HttpResponseMessage response = await client.GetAsync(url);
 

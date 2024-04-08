@@ -109,6 +109,9 @@ namespace patchikatcha_backend.Controllers
 
             foreach (var item in checkoutObject)
             {
+                string uniqueGuid = Guid.NewGuid().ToString();
+                string firstTenChars = uniqueGuid.Substring(0, 10);
+
                 options.LineItems.Add(new SessionLineItemOptions
                 {
                     Price = item.PriceId,
@@ -116,7 +119,7 @@ namespace patchikatcha_backend.Controllers
 
                 });
 
-                var metadataKey = item.VariantId.ToString();
+                var metadataKey = item.VariantId.ToString() + "_" + firstTenChars;
 
                options.Metadata.Add(metadataKey, item.VariantId.ToString());
             }
@@ -273,12 +276,14 @@ namespace patchikatcha_backend.Controllers
                             // Get the metadata key-value pair for the current line item
                             var kv = metaDataEnumerator.Current;
 
-                                var lineItem = new line_items()
-                                {
-                                    product_id = item.Price.LookupKey,
-                                    variant_id = Convert.ToInt32(kv.Value),
-                                    quantity = (int)item.Quantity,
-                                };
+                            var variantId = Convert.ToInt32(kv.Value.Split("_")[0]);
+
+                            var lineItem = new line_items()
+                            {
+                                product_id = item.Price.LookupKey,
+                                variant_id = variantId,
+                                quantity = (int)item.Quantity,
+                             };
 
                                 printifyOrder.line_items.Add(lineItem);
                 
