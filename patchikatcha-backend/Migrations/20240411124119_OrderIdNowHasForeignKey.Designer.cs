@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using patchikatcha_backend.Data;
@@ -11,9 +12,11 @@ using patchikatcha_backend.Data;
 namespace patchikatcha_backend.Migrations
 {
     [DbContext(typeof(AuthDbContext))]
-    partial class AuthDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240411124119_OrderIdNowHasForeignKey")]
+    partial class OrderIdNowHasForeignKey
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -309,15 +312,18 @@ namespace patchikatcha_backend.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("ApplicationUserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("OrderId")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("UserEmail")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.HasKey("Id");
+
+                    b.HasIndex("ApplicationUserId")
+                        .IsUnique();
 
                     b.ToTable("Orders");
                 });
@@ -384,9 +390,22 @@ namespace patchikatcha_backend.Migrations
                     b.Navigation("ApplicationUser");
                 });
 
+            modelBuilder.Entity("patchikatcha_backend.Models.Order", b =>
+                {
+                    b.HasOne("patchikatcha_backend.Models.ApplicationUser", "ApplicationUser")
+                        .WithOne("Order")
+                        .HasForeignKey("patchikatcha_backend.Models.Order", "ApplicationUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ApplicationUser");
+                });
+
             modelBuilder.Entity("patchikatcha_backend.Models.ApplicationUser", b =>
                 {
                     b.Navigation("Cart");
+
+                    b.Navigation("Order");
                 });
 #pragma warning restore 612, 618
         }

@@ -28,9 +28,9 @@ namespace patchikatcha_backend.Controllers
     {
         private readonly HttpClient client;
         private readonly IConfiguration configuration;
-        private readonly PatchiContext patchiContext;
+        private readonly AuthDbContext patchiContext;
 
-        public StripeController(HttpClient client, IConfiguration configuration, PatchiContext patchiContext)
+        public StripeController(HttpClient client, IConfiguration configuration, AuthDbContext patchiContext)
         {
 
             StripeConfiguration.ApiKey = "sk_test_51Onkz6Lwv2BbZpNwYDF8RzBVcmiQAZ59EeoWeBEYD3WJTRmhakFtyUR1tAJcCp4Vrr9mKhxzJARNA0rEPyfyofWV00cISXaGE8";
@@ -76,6 +76,10 @@ namespace patchikatcha_backend.Controllers
                 ShippingAddressCollection = new SessionShippingAddressCollectionOptions
                 {
                     AllowedCountries = new List<string> { $"{checkoutObject[0].UserGeo.UserCountry}"},
+                },
+                AutomaticTax = new SessionAutomaticTaxOptions
+                {
+                    Enabled = true
                 },
                 ShippingOptions = new List<SessionShippingOptionOptions>
                 {

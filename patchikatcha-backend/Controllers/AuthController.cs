@@ -81,6 +81,7 @@ namespace patchikatcha_backend.Controllers
             var tokenResponse = new LoginTokenResponse
             {
                 jwtToken = jwtToken,
+                userId = user.Id,
             };
 
             return Ok(tokenResponse);
@@ -163,6 +164,29 @@ namespace patchikatcha_backend.Controllers
 
             var result = await userManager.UpdateAsync(user);
             return Ok("Saved");
+        }
+
+        [HttpPut]
+        [Route("change-user-email")]
+        public async Task<IActionResult> Test(string userEmail, string newEmail)
+        {
+
+            var user = await userManager.FindByEmailAsync(userEmail);
+
+            user.Email = newEmail;
+            user.NormalizedEmail = newEmail.ToUpper();
+            user.UserName = newEmail;
+
+            var orders = authDbContext.Orders.Where(order => order.UserEmail == userEmail).ToList();
+
+            foreach (var order in orders)
+            {
+                order.UserEmail = newEmail;
+            }
+
+            await authDbContext.SaveChangesAsync();
+
+            return Ok("Your email was changed");
         }
 
         [HttpGet]

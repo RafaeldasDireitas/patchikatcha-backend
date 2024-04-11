@@ -13,27 +13,27 @@ namespace patchikatcha_backend.Controllers
     {
         private readonly HttpClient client;
         private readonly IConfiguration configuration;
-        private readonly PatchiContext patchiContext;
+        private readonly AuthDbContext authDbContext;
         private readonly IMemoryCache memoryCache;
 
-        public OrderController(HttpClient client, IConfiguration configuration, IMemoryCache memoryCache, PatchiContext patchiContext)
+        public OrderController(HttpClient client, IConfiguration configuration, IMemoryCache memoryCache, AuthDbContext authDbContext)
         {
             this.client = client;
             this.configuration = configuration;
-            this.patchiContext = patchiContext;
+            this.authDbContext = authDbContext;
             this.memoryCache = memoryCache;
         }
 
         [HttpGet]
         [Route("grab-orders-id")]
-        public async Task<IActionResult> GrabOrdersId(string userEmail)
+        public async Task<IActionResult> GrabOrdersId(string userId)
         {
-            if (memoryCache.TryGetValue(userEmail, out List<GrabUserOrdersDto> cachedResponse))
+            if (memoryCache.TryGetValue(userId, out List<GrabUserOrdersDto> cachedResponse))
             {
                 return Ok(cachedResponse);
             }
 
-            var findOrders = patchiContext.Orders.Where(email => email.UserEmail == userEmail).ToArray();
+            var findOrders = authDbContext.Orders.Where(orders => orders.UserEmail  == userId).ToArray();
 
             if (findOrders == null)
             {
@@ -44,10 +44,10 @@ namespace patchikatcha_backend.Controllers
 
             foreach (var item in findOrders)
             {
-                idList.Add(new GrabUserOrdersDto { OrderId = item.OrderId});
+                idList.Add(new GrabUserOrdersDto { OrderId = item.OrderId });
             }
 
-            memoryCache.Set(userEmail, idList, TimeSpan.FromMinutes(30));
+            memoryCache.Set(userId, idList, TimeSpan.FromMinutes(30));
 
             return Ok(idList);
         }

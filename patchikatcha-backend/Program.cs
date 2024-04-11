@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -56,7 +57,6 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 builder.Services.AddDbContext<AuthDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("PatchiKatchaConnectionString")));
-builder.Services.AddDbContext<PatchiContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("PatchiKatchaConnectionString")));
 builder.Services.AddIdentityCore<ApplicationUser>().AddRoles<IdentityRole>().AddTokenProvider<DataProtectorTokenProvider<ApplicationUser>>("PatchiKatcha").AddEntityFrameworkStores<AuthDbContext>().AddDefaultTokenProviders();
 builder.Services.Configure<IdentityOptions>(options =>
 {

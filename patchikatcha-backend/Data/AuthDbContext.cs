@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using patchikatcha_backend.Models;
+using System.Reflection.Emit;
 
 namespace patchikatcha_backend.Data;
 
@@ -11,6 +12,9 @@ public partial class AuthDbContext : IdentityDbContext<ApplicationUser>
     {
 
     }
+
+    public DbSet<Order> Orders { get; set; }
+    public DbSet<Cart> Carts { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
