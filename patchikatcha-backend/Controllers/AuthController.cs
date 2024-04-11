@@ -176,6 +176,7 @@ namespace patchikatcha_backend.Controllers
             user.Email = newEmail;
             user.NormalizedEmail = newEmail.ToUpper();
             user.UserName = newEmail;
+            user.NormalizedUserName = newEmail.ToUpper();
 
             var orders = authDbContext.Orders.Where(order => order.UserEmail == userEmail).ToList();
 
