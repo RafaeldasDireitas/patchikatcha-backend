@@ -26,14 +26,14 @@ namespace patchikatcha_backend.Controllers
 
         [HttpGet]
         [Route("grab-orders-id")]
-        public async Task<IActionResult> GrabOrdersId(string userId)
+        public async Task<IActionResult> GrabOrdersId(string userEmail)
         {
-            if (memoryCache.TryGetValue(userId, out List<GrabUserOrdersDto> cachedResponse))
+            if (memoryCache.TryGetValue(userEmail, out List<GrabUserOrdersDto> cachedResponse))
             {
                 return Ok(cachedResponse);
             }
 
-            var findOrders = authDbContext.Orders.Where(orders => orders.UserEmail  == userId).ToArray();
+            var findOrders = authDbContext.Orders.Where(orders => orders.UserEmail  == userEmail).ToArray();
 
             if (findOrders == null)
             {
@@ -47,7 +47,7 @@ namespace patchikatcha_backend.Controllers
                 idList.Add(new GrabUserOrdersDto { OrderId = item.OrderId });
             }
 
-            memoryCache.Set(userId, idList, TimeSpan.FromMinutes(30));
+            memoryCache.Set(userEmail, idList, TimeSpan.FromMinutes(30));
 
             return Ok(idList);
         }

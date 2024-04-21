@@ -18,5 +18,7 @@
         public int VariantId { get; set; }
         public int FirstItem { get; set; }
         public int AdditionalItems { get; set; }
+        public int BlueprintId { get; set; }
+        public int PrintProviderId { get; set; }
     }
 }

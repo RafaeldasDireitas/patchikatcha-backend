@@ -1,8 +1,11 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using patchikatcha_backend.Data;
 using patchikatcha_backend.DTO;
 using patchikatcha_backend.Models;
+using Stripe.Climate;
+using System.Text.Json;
 
 namespace patchikatcha_backend.Controllers
 {
@@ -10,11 +13,18 @@ namespace patchikatcha_backend.Controllers
     [ApiController]
     public class CartController : ControllerBase
     {
+        private readonly UserManager<ApplicationUser> userManager;
         private readonly AuthDbContext authDbContext;
+        private readonly HttpClient client;
+        private readonly IConfiguration configuration;
 
-        public CartController(AuthDbContext authDbContext)
+        public CartController(UserManager<ApplicationUser> userManager, AuthDbContext authDbContext, HttpClient client, IConfiguration configuration)
         {
             this.authDbContext = authDbContext;
+            this.client = client;
+            this.configuration = configuration;
+            this.userManager = userManager;
+
         }
 
         [HttpPost]
@@ -41,6 +51,8 @@ namespace patchikatcha_backend.Controllers
                     VariantId = cart.VariantId,
                     FirstItem = cart.FirstItem,
                     AdditionalItems = cart.AdditionalItems,
+                    BlueprintId = cart.BlueprintId,
+                    PrintProviderId = cart.PrintProviderId
                 };
 
                 await authDbContext.Carts.AddAsync(cartItem);
@@ -68,6 +80,65 @@ namespace patchikatcha_backend.Controllers
             }
 
             return BadRequest("There was an error");
+        }
+
+        [HttpPut]
+        [Route("update-cart-shipping")]
+        public async Task<IActionResult> UpdateCartShipping(string userId, CartBlueprintDto[] cartBlueprint)
+        {
+            var apiKey = configuration["PRINTIFY_API"];
+            var shopId = configuration["PRINTIFY_SHOP_ID"];
+
+            client.DefaultRequestHeaders.Add("Authorization", apiKey);
+
+            var findUser = await userManager.FindByIdAsync(userId);
+
+            if (findUser != null)
+            {
+                var profileList = new List<ProfilesDto>();
+
+                foreach (var item in cartBlueprint)
+                {
+                    var url = $"https://localhost:7065/api/Blueprint/get-blueprint/{item.BlueprintId}/{item.PrintProviderId}";
+
+                    HttpResponseMessage response = await client.GetAsync(url);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var data = await response.Content.ReadAsStringAsync();
+
+                        var deserializedData = JsonSerializer.Deserialize<BlueprintDto>(data);
+
+                        var findCountry = deserializedData.Profiles.FirstOrDefault(profile => profile.countries.Contains(item.UserCountryCode));
+
+                        var newProfile = new ProfilesDto
+                        {
+                            variant_ids = findCountry.variant_ids,
+                            first_item = new first_item
+                            {
+                                cost = findCountry.first_item.cost,
+                                currency = findCountry.first_item.currency
+                            },
+                            additional_items = new additional_items
+                            {
+                                cost = findCountry.additional_items.cost,
+                                currency = findCountry.additional_items.currency
+                            },
+                            countries = findCountry.countries
+                        };
+
+                        profileList.Add(newProfile);
+                    }
+                    else
+                    {
+                        return BadRequest("Something went wrong, try again");
+                    }
+                }
+
+                return Ok(profileList);
+            }
+
+            return BadRequest("No user was found");
         }
 
         [HttpDelete]
