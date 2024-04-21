@@ -111,23 +111,41 @@ namespace patchikatcha_backend.Controllers
 
                         var findCountry = deserializedData.Profiles.FirstOrDefault(profile => profile.countries.Contains(item.UserCountryCode));
 
-                        var newProfile = new ProfilesDto
-                        {
-                            variant_ids = findCountry.variant_ids,
-                            first_item = new first_item
-                            {
-                                cost = findCountry.first_item.cost,
-                                currency = findCountry.first_item.currency
-                            },
-                            additional_items = new additional_items
-                            {
-                                cost = findCountry.additional_items.cost,
-                                currency = findCountry.additional_items.currency
-                            },
-                            countries = findCountry.countries
-                        };
+                        var findItem = authDbContext.Carts.Where(cart => cart.BlueprintId == item.BlueprintId && cart.PrintProviderId == item.PrintProviderId && cart.ApplicationUserId == userId);
 
-                        profileList.Add(newProfile);
+                        if (findItem != null)
+                        {
+                            foreach (var product in findItem)
+                            {
+                                product.FirstItem = findCountry.first_item.cost;
+                                product.AdditionalItems = findCountry.additional_items.cost;
+
+                                var newProfile = new ProfilesDto
+                                {
+                                    variant_ids = findCountry.variant_ids,
+                                    first_item = new first_item
+                                    {
+                                        cost = findCountry.first_item.cost,
+                                        currency = findCountry.first_item.currency
+                                    },
+                                    additional_items = new additional_items
+                                    {
+                                        cost = findCountry.additional_items.cost,
+                                        currency = findCountry.additional_items.currency
+                                    },
+                                    countries = findCountry.countries
+                                };
+
+                                profileList.Add(newProfile);
+                            }
+
+                            await authDbContext.SaveChangesAsync();
+
+                            return Ok(profileList);
+                        } else
+                        {
+                            return BadRequest("There was an error");
+                        }
                     }
                     else
                     {
@@ -135,7 +153,7 @@ namespace patchikatcha_backend.Controllers
                     }
                 }
 
-                return Ok(profileList);
+                return Ok("Shipping rate changed");
             }
 
             return BadRequest("No user was found");
