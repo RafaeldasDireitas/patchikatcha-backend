@@ -8,7 +8,9 @@ using System.Text.Json.Nodes;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
@@ -28,60 +30,67 @@ namespace patchikatcha_backend.Controllers
     {
         private readonly HttpClient client;
         private readonly IConfiguration configuration;
-        private readonly AuthDbContext patchiContext;
+        private readonly AuthDbContext authDbContext;
+        private readonly UserManager<ApplicationUser> userManager;
 
-        public StripeController(HttpClient client, IConfiguration configuration, AuthDbContext patchiContext)
+        public StripeController(HttpClient client, IConfiguration configuration, AuthDbContext authDbContext, UserManager<ApplicationUser> userManager)
         {
 
             StripeConfiguration.ApiKey = "sk_test_51Onkz6Lwv2BbZpNwYDF8RzBVcmiQAZ59EeoWeBEYD3WJTRmhakFtyUR1tAJcCp4Vrr9mKhxzJARNA0rEPyfyofWV00cISXaGE8";
             this.client = client;
             this.configuration = configuration;
-            this.patchiContext = patchiContext;
+            this.authDbContext = authDbContext;
+            this.userManager = userManager;
         }
 
         [HttpPost]
         [Route("create-checkout-session")]
-        public ActionResult Create(string userEmail, [FromBody] CartDto[] checkoutObject)
+        public async Task<ActionResult> Create(string userEmail, string userId)
         {
             int shippingRate = 0;
+            var findUser = await userManager.FindByIdAsync(userId);
 
-            foreach (CartDto cart in checkoutObject)
+            if (findUser != null)
             {
-                if (cart.Quantity == 1)
-                {
-                    shippingRate = shippingRate + cart.FirstItem;
-                }
+                var userCart = await authDbContext.Carts.Where(product => product.ApplicationUserId == userId).ToListAsync();
 
-                if (cart.Quantity > 1)
+                foreach (var cart in userCart)
                 {
-                    shippingRate = shippingRate + cart.FirstItem;
-                    for (int i = 0; i < cart.Quantity - 1; i++)
+                    if (cart.Quantity == 1)
                     {
-                        shippingRate = shippingRate + cart.AdditionalItems;
+                        shippingRate = shippingRate + cart.FirstItem;
+                    }
+
+                    if (cart.Quantity > 1)
+                    {
+                        shippingRate = shippingRate + cart.FirstItem;
+                        for (int i = 0; i < cart.Quantity - 1; i++)
+                        {
+                            shippingRate = shippingRate + cart.AdditionalItems;
+                        }
                     }
                 }
-            }
 
-            var domain = "http://localhost:3000/checkout/order-successful";
-            var options = new SessionCreateOptions
-            {
-                CustomerEmail = userEmail,
-                UiMode = "embedded",
-                LineItems = new List<SessionLineItemOptions>(),
-                Metadata = new Dictionary<string, string>(),
-                Mode = "payment",
-                ReturnUrl = domain,
-                Locale = "auto",
-                BillingAddressCollection = "required",
-                ShippingAddressCollection = new SessionShippingAddressCollectionOptions
+                var domain = "http://localhost:3000/checkout/order-successful";
+                var options = new SessionCreateOptions
                 {
-                    AllowedCountries = new List<string> { $"{checkoutObject[0].UserGeo.UserCountry}"},
-                },
-                AutomaticTax = new SessionAutomaticTaxOptions
-                {
-                    Enabled = true
-                },
-                ShippingOptions = new List<SessionShippingOptionOptions>
+                    CustomerEmail = userEmail,
+                    UiMode = "embedded",
+                    LineItems = new List<SessionLineItemOptions>(),
+                    Metadata = new Dictionary<string, string>(),
+                    Mode = "payment",
+                    ReturnUrl = domain,
+                    Locale = "auto",
+                    BillingAddressCollection = "required",
+                    ShippingAddressCollection = new SessionShippingAddressCollectionOptions
+                    {
+                        AllowedCountries = new List<string> { $"{userCart[0].UserCountry}" },
+                    },
+                    AutomaticTax = new SessionAutomaticTaxOptions
+                    {
+                        Enabled = true
+                    },
+                    ShippingOptions = new List<SessionShippingOptionOptions>
                 {
                     new SessionShippingOptionOptions
                     {
@@ -90,7 +99,7 @@ namespace patchikatcha_backend.Controllers
                             Type = "fixed_amount",
                             FixedAmount = new SessionShippingOptionShippingRateDataFixedAmountOptions {
                                 Amount = shippingRate,
-                                Currency = $"{checkoutObject[0].UserGeo.Currency}",
+                                Currency = $"{userCart[0].Currency}",
                             },
                             DisplayName = "Shipping",
                             DeliveryEstimate = new SessionShippingOptionShippingRateDataDeliveryEstimateOptions
@@ -109,39 +118,43 @@ namespace patchikatcha_backend.Controllers
                         },
                     },
                 }
-            };
+                };
 
-            foreach (var item in checkoutObject)
-            {
-                string uniqueGuid = Guid.NewGuid().ToString();
-                string firstTenChars = uniqueGuid.Substring(0, 10);
-
-                options.LineItems.Add(new SessionLineItemOptions
+                foreach (var item in userCart)
                 {
-                    Price = item.PriceId,
-                    Quantity = item.Quantity,
+                    string uniqueGuid = Guid.NewGuid().ToString();
+                    string firstTenChars = uniqueGuid.Substring(0, 10);
 
-                });
+                    options.LineItems.Add(new SessionLineItemOptions
+                    {
+                        Price = item.PriceId,
+                        Quantity = item.Quantity,
 
-                var metadataKey = item.VariantId.ToString() + "_" + firstTenChars;
+                    });
 
-               options.Metadata.Add(metadataKey, item.VariantId.ToString());
+                    var metadataKey = item.VariantId.ToString() + "_" + firstTenChars;
+
+                    options.Metadata.Add(metadataKey, item.VariantId.ToString());
+                }
+
+                var service = new SessionService();
+                Session session = service.Create(options);
+                string clientSecret = session.ClientSecret;
+                string clientId = session.Id;
+
+                var clientData = new
+                {
+                    clientSecret = clientSecret,
+                    clientId = clientId
+                };
+
+                var clientJson = JsonSerializer.Serialize(clientData);
+
+                return Ok(clientJson);
             }
 
-            var service = new SessionService();
-            Session session = service.Create(options);
-            string clientSecret = session.ClientSecret;
-            string clientId = session.Id;
-
-            var clientData = new
-            {
-                clientSecret = clientSecret,
-                clientId = clientId
-            };
-
-            var clientJson = JsonSerializer.Serialize(clientData);
-
-            return Ok(clientJson);
+            return BadRequest("No user found");
+            
         }
 
         [HttpGet]
@@ -310,8 +323,8 @@ namespace patchikatcha_backend.Controllers
                                 UserEmail = userEmail,
                             };
 
-                            var createOrder = await patchiContext.AddAsync(order);
-                            await patchiContext.SaveChangesAsync();
+                            var createOrder = await authDbContext.AddAsync(order);
+                            await authDbContext.SaveChangesAsync();
                         }
 
                     }

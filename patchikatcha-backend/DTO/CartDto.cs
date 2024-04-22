@@ -19,7 +19,9 @@
         public int BlueprintId { get; set; }
         public int PrintProviderId { get; set; }
         public UserGeo? UserGeo { get; set; }
-        
+        public string UserCountry { get; set; }
+        public string Currency { get; set; }
+
     }
 
     public class UserGeo

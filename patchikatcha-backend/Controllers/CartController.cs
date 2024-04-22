@@ -1,11 +1,13 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using patchikatcha_backend.Data;
 using patchikatcha_backend.DTO;
 using patchikatcha_backend.Models;
 using Stripe.Climate;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace patchikatcha_backend.Controllers
 {
@@ -52,7 +54,9 @@ namespace patchikatcha_backend.Controllers
                     FirstItem = cart.FirstItem,
                     AdditionalItems = cart.AdditionalItems,
                     BlueprintId = cart.BlueprintId,
-                    PrintProviderId = cart.PrintProviderId
+                    PrintProviderId = cart.PrintProviderId,
+                    UserCountry = cart.UserCountry,
+                    Currency = cart.Currency
                 };
 
                 await authDbContext.Carts.AddAsync(cartItem);
@@ -119,6 +123,7 @@ namespace patchikatcha_backend.Controllers
                             {
                                 product.FirstItem = findCountry.first_item.cost;
                                 product.AdditionalItems = findCountry.additional_items.cost;
+                                product.UserCountry = item.UserCountryCode;
 
                                 var newProfile = new ProfilesDto
                                 {

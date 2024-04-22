@@ -1,9 +1,12 @@
-﻿namespace patchikatcha_backend.Models
+﻿using System.Text.Json.Serialization;
+
+namespace patchikatcha_backend.Models
 {
     public class Cart
     {
         public int Id { get; set; }
         public string ApplicationUserId { get; set; }
+        [JsonIgnore]
         public ApplicationUser ApplicationUser {  get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
@@ -20,5 +23,8 @@
         public int AdditionalItems { get; set; }
         public int BlueprintId { get; set; }
         public int PrintProviderId { get; set; }
+        public string UserCountry { get; set; }
+        public string Currency { get; set; }
     }
+
 }
