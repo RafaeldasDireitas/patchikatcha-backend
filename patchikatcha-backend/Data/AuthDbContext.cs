@@ -15,6 +15,7 @@ public partial class AuthDbContext : IdentityDbContext<ApplicationUser>
 
     public DbSet<Order> Orders { get; set; }
     public DbSet<Cart> Carts { get; set; }
+    public DbSet<Wishlist> Wishlists { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
