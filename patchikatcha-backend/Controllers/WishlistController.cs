@@ -38,9 +38,31 @@ namespace patchikatcha_backend.Controllers
             return BadRequest("There was an error");
         }
 
-        [HttpPut]
+        [HttpGet]
+        [Route("is-wishlisted")]
+        public async Task<IActionResult> IsWishlisted(string userId, string productId)
+        {
+            var findUser = await userManager.FindByIdAsync(userId);
+
+            if (findUser != null)
+            {
+                var findInDb = authDbContext.Wishlists.FirstOrDefault(product => product.ApplicationUserId == userId && product.ProductId == productId);
+
+                if (findInDb != null)
+                {
+                    return Ok("Product wishlisted");
+                } else
+                {
+                    return BadRequest("No product found");
+                }
+            }
+
+            return BadRequest("No user found");
+        }
+
+        [HttpPost]
         [Route("create-wishlist")]
-        public async Task<IActionResult> CreateWishlist(string userId, WishlistDto wishlistDto)
+        public async Task<IActionResult> CreateWishlist(string userId, WishlistDto wishlist)
         {
             var findUser = await userManager.FindByIdAsync(userId);
 
@@ -49,10 +71,10 @@ namespace patchikatcha_backend.Controllers
                 var newWishlist = new Wishlist
                 {
                     ApplicationUserId = userId,
-                    Title = wishlistDto.Title,
-                    Price = wishlistDto.Price,
-                    Image = wishlistDto.Image,
-                    ProductId = wishlistDto.ProductId
+                    Title = wishlist.Title,
+                    Price = wishlist.Price,
+                    Image = wishlist.Image,
+                    ProductId = wishlist.ProductId
                 };
 
                 await authDbContext.Wishlists.AddAsync(newWishlist);
@@ -60,6 +82,31 @@ namespace patchikatcha_backend.Controllers
 
                 return Ok("Wishlist created");
             }
+
+            return BadRequest("There was an error");
+        }
+
+        [HttpDelete]
+        [Route("remove-wishlist")]
+        public async Task<IActionResult> RemoveWishlist(string userId, string productId)
+        {
+            var findUser = await userManager.FindByIdAsync(userId);
+
+            if (findUser != null)
+            {
+                var findProduct = authDbContext.Wishlists.FirstOrDefault(product => product.ApplicationUserId == userId && product.ProductId == productId);
+
+                if (findProduct != null)
+                {
+                    authDbContext.Wishlists.Remove(findProduct);
+                    await authDbContext.SaveChangesAsync();
+
+                    return Ok("Wishlist deleted");
+                } else
+                {
+                    return BadRequest("No product found");
+                }
+            } 
 
             return BadRequest("There was an error");
         }
