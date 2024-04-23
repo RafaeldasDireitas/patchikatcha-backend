@@ -36,7 +36,7 @@ namespace patchikatcha_backend.Controllers
             var applicationUser = new ApplicationUser
             {
                 Email = registerDto.Email,
-                UserName = registerDto.Email,
+                UserName = registerDto.Username,
             };
 
             var identityResult = await userManager.CreateAsync(applicationUser, registerDto.Password);

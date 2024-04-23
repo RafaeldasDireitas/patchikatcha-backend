@@ -4,6 +4,7 @@ namespace patchikatcha_backend.DTO
 {
     public class RegisterDto
     {
+        public required string Username { get; set; }
         [DataType(DataType.EmailAddress)]
         [EmailAddress]
         public required string Email { get; set; }
