@@ -23,10 +23,10 @@ namespace patchikatcha_backend.Controllers
         }
 
         [HttpGet]
-        [Route("grab-3-reviews")]
-        public async Task<IActionResult> Grab3Reviews(string productId)
+        [Route("grab-reviews")]
+        public async Task<IActionResult> GrabReviews(string productId, int limit)
         {
-            var reviews = authDbContext.Reviews.Where(review => review.ProductId == productId).Take(3).Select(review => new
+            var reviews = authDbContext.Reviews.Where(review => review.ProductId == productId).OrderByDescending(review => review.Id).Take(limit).Select(review => new
             {
                 review.Id,
                 review.Title,
