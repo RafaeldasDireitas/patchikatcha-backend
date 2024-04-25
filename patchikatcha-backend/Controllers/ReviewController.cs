@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using patchikatcha_backend.Data;
 using patchikatcha_backend.DTO;
 using patchikatcha_backend.Models;
@@ -21,6 +22,28 @@ namespace patchikatcha_backend.Controllers
             this.authDbContext = authDbContext;
         }
 
+        [HttpGet]
+        [Route("grab-3-reviews")]
+        public async Task<IActionResult> Grab3Reviews(string productId)
+        {
+            var reviews = authDbContext.Reviews.Where(review => review.ProductId == productId).Take(3).Select(review => new
+            {
+                review.Id,
+                review.Title,
+                review.Comment,
+                review.Rating,
+                review.CreatedAt,
+                Username = review.ApplicationUser.UserName,
+            }).ToList();
+
+            if (reviews != null)
+            {
+                return Ok(reviews);
+            }
+
+            return BadRequest("No reviews for this product");
+        }
+
         [HttpPost]
         [Route("create-review")]
         public async Task<IActionResult> CreateReview(ReviewDto review)
@@ -29,7 +52,8 @@ namespace patchikatcha_backend.Controllers
             var createReview = new Review
             {
                 ProductId = review.ProductId,
-                Username = review.Username,
+                Title = review.Title,
+                ApplicationUserId = review.ApplicationUserId,
                 Comment = review.Comment,
                 Rating = review.Rating,
                 CreatedAt = review.CreatedAt,
