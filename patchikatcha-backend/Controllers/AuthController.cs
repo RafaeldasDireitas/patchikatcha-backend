@@ -37,6 +37,7 @@ namespace patchikatcha_backend.Controllers
             {
                 Email = registerDto.Email,
                 UserName = registerDto.Username,
+                UserCurrency = "EUR",
             };
 
             var identityResult = await userManager.CreateAsync(applicationUser, registerDto.Password);
@@ -156,13 +157,15 @@ namespace patchikatcha_backend.Controllers
 
         [HttpPut]
         [Route("update-user-country")]
-        public async Task<IActionResult> UpdateUserCountry(string userEmail, string newCountry)
+        public async Task<IActionResult> UpdateUserCountry(string userId, string newCountry)
         {
-            var user = await userManager.FindByEmailAsync(userEmail);
+            var user = await userManager.FindByIdAsync(userId);
 
             user.UserCountry = newCountry;
 
             var result = await userManager.UpdateAsync(user);
+            await authDbContext.SaveChangesAsync();
+
             return Ok("Saved");
         }
 

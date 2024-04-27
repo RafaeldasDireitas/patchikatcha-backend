@@ -45,7 +45,7 @@ namespace patchikatcha_backend.Controllers
 
         [HttpPost]
         [Route("create-checkout-session")]
-        public async Task<ActionResult> Create(string userEmail, string userId)
+        public async Task<ActionResult> Create(string userId)
         {
             int shippingRate = 0;
             var findUser = await userManager.FindByIdAsync(userId);
@@ -74,7 +74,7 @@ namespace patchikatcha_backend.Controllers
                 var domain = "http://localhost:3000/checkout/order-successful";
                 var options = new SessionCreateOptions
                 {
-                    CustomerEmail = userEmail,
+                    CustomerEmail = findUser.Email,
                     UiMode = "embedded",
                     LineItems = new List<SessionLineItemOptions>(),
                     Metadata = new Dictionary<string, string>(),
@@ -84,7 +84,7 @@ namespace patchikatcha_backend.Controllers
                     BillingAddressCollection = "required",
                     ShippingAddressCollection = new SessionShippingAddressCollectionOptions
                     {
-                        AllowedCountries = new List<string> { $"{userCart[0].UserCountry}" },
+                        AllowedCountries = new List<string> { $"{findUser.UserCountry}" },
                     },
                     AutomaticTax = new SessionAutomaticTaxOptions
                     {
@@ -99,7 +99,7 @@ namespace patchikatcha_backend.Controllers
                             Type = "fixed_amount",
                             FixedAmount = new SessionShippingOptionShippingRateDataFixedAmountOptions {
                                 Amount = shippingRate,
-                                Currency = $"{userCart[0].Currency}",
+                                Currency = findUser.UserCurrency,
                             },
                             DisplayName = "Shipping",
                             DeliveryEstimate = new SessionShippingOptionShippingRateDataDeliveryEstimateOptions

@@ -23,8 +23,6 @@ namespace patchikatcha_backend.Models
         public int AdditionalItems { get; set; }
         public int BlueprintId { get; set; }
         public int PrintProviderId { get; set; }
-        public string UserCountry { get; set; }
-        public string Currency { get; set; }
     }
 
 }

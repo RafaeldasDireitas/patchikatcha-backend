@@ -106,8 +106,6 @@ namespace patchikatcha_backend.Controllers
                                     AdditionalItems = item.AdditionalItems,
                                     BlueprintId = item.BlueprintId,
                                     PrintProviderId = item.PrintProviderId,
-                                    UserCountry = item.UserCountry,
-                                    Currency = item.Currency
                                 });
 
                                 await authDbContext.SaveChangesAsync();
@@ -178,8 +176,6 @@ namespace patchikatcha_backend.Controllers
                     AdditionalItems = cart.AdditionalItems,
                     BlueprintId = cart.BlueprintId,
                     PrintProviderId = cart.PrintProviderId,
-                    UserCountry = cart.UserCountry,
-                    Currency = cart.Currency
                 };
 
                 await authDbContext.Carts.AddAsync(cartItem);
@@ -246,7 +242,6 @@ namespace patchikatcha_backend.Controllers
                             {
                                 product.FirstItem = findCountry.first_item.cost;
                                 product.AdditionalItems = findCountry.additional_items.cost;
-                                product.UserCountry = item.UserCountryCode;
 
                                 var newProfile = new ProfilesDto
                                 {
