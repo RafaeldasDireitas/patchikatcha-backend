@@ -23,8 +23,8 @@ namespace patchikatcha_backend.Controllers
         }
 
         [HttpGet]
-        [Route("grab-reviews")]
-        public async Task<IActionResult> GrabReviews(string productId, int limit)
+        [Route("grab-product-reviews")]
+        public async Task<IActionResult> GrabProductReviews(string productId, int limit)
         {
             var reviews = authDbContext.Reviews.Where(review => review.ProductId == productId).OrderByDescending(review => review.Id).Take(limit).Select(review => new
             {
@@ -42,6 +42,23 @@ namespace patchikatcha_backend.Controllers
             }
 
             return BadRequest("No reviews for this product");
+        }
+
+        [HttpGet]
+        [Route("grab-user-reviews")]
+        public async Task<IActionResult> GrabUserReviews(string userId)
+        {
+            var findUser = await userManager.FindByIdAsync(userId);
+
+            if (findUser != null)
+            {
+                var userReviews = authDbContext.Reviews.Where(review => review.ApplicationUserId == userId).ToList();
+
+                return Ok(userReviews);
+            }
+
+            return BadRequest("User has no reviews");
+
         }
 
         [HttpPost]
@@ -63,6 +80,30 @@ namespace patchikatcha_backend.Controllers
             await authDbContext.SaveChangesAsync();
 
             return Ok("review created");
+        }
+
+        [HttpDelete]
+        [Route("delete-review")]
+        public async Task<IActionResult> DeleteReview(string userId, int Id)
+        {
+            var findUser = await userManager.FindByIdAsync(userId);
+
+            if (findUser != null)
+            {
+                var findReview = await authDbContext.Reviews.FirstOrDefaultAsync(review =>  review.ApplicationUserId == userId && review.Id == Id);
+
+                if (findReview != null)
+                {
+                    authDbContext.Reviews.Remove(findReview);
+                    await authDbContext.SaveChangesAsync();
+
+                    return Ok("Review removed");
+                }
+
+                return BadRequest("No review found");
+            }
+
+            return BadRequest("No user found");
         }
     }
 }

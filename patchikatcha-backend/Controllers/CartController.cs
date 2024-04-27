@@ -29,6 +29,129 @@ namespace patchikatcha_backend.Controllers
 
         }
 
+        [HttpPut]
+        [Route("grab-user-cart")]
+        public async Task<IActionResult> GrabUserCart(string userId, CartDto[] cart)
+        {
+            var findUser = await userManager.FindByIdAsync(userId);
+
+            if (cart.Length == 0)
+            {
+                var findUserCart = authDbContext.Carts.Where(cart => cart.ApplicationUserId == userId).Select(cart => new
+                {
+                    cart.Name,
+                    cart.Description,
+                    cart.BasePrice,
+                    cart.Price,
+                    cart.PriceId,
+                    cart.Image,
+                    cart.Quantity,
+                    cart.Size,
+                    cart.Color,
+                    cart.ProductId,
+                    cart.VariantId,
+                    cart.FirstItem,
+                    cart.AdditionalItems,
+                    cart.BlueprintId,
+                    cart.PrintProviderId,
+
+                }).ToList();
+
+                return Ok(findUserCart);
+            }
+
+            if (findUser != null)
+            {
+
+                foreach (var item in cart)
+                {
+                    var url = $"https://localhost:7065/api/Blueprint/get-blueprint/{item.BlueprintId}/{item.PrintProviderId}";
+
+                    HttpResponseMessage response = await client.GetAsync(url);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var data = await response.Content.ReadAsStringAsync();
+
+                        var deserializedData = JsonSerializer.Deserialize<BlueprintDto>(data);
+
+                        var findCountry = deserializedData.Profiles.FirstOrDefault(profile => profile.countries.Contains(item.UserCountry));
+
+                        if (findCountry.first_item.cost == item.FirstItem && findCountry.additional_items.cost == item.AdditionalItems)
+                        {
+                            var findCartItem = authDbContext.Carts.FirstOrDefault(cart => cart.ApplicationUserId == userId && cart.Name == item.Name && cart.BlueprintId == item.BlueprintId && cart.PrintProviderId == item.PrintProviderId);
+                            
+                            if (findCartItem != null)
+                            {
+                                findCartItem.Quantity = findCartItem.Quantity + item.Quantity;
+                                await authDbContext.SaveChangesAsync();
+
+                            } else
+                            {
+                                authDbContext.Carts.Add(new Cart
+                                {
+                                    ApplicationUserId = userId,
+                                    Name = item.Name,
+                                    Description = item.Description,
+                                    BasePrice = item.BasePrice,
+                                    Price = item.Price,
+                                    PriceId = item.PriceId,
+                                    Image = item.Image,
+                                    Quantity = item.Quantity,
+                                    Size = (int)item.Size,
+                                    Color = (int)item.Color,
+                                    ProductId = item.ProductId,
+                                    VariantId = item.VariantId,
+                                    FirstItem = item.FirstItem,
+                                    AdditionalItems = item.AdditionalItems,
+                                    BlueprintId = item.BlueprintId,
+                                    PrintProviderId = item.PrintProviderId,
+                                    UserCountry = item.UserCountry,
+                                    Currency = item.Currency
+                                });
+
+                                await authDbContext.SaveChangesAsync();
+                            }
+                        }
+                        else
+                        {
+                            BadRequest("I see what you did");
+                        }
+                    } else
+                    {
+                        BadRequest("No product found");
+                    }
+                }
+
+                 await authDbContext.SaveChangesAsync();
+
+                var findUserCart = authDbContext.Carts.Where(cart => cart.ApplicationUserId == userId).Select(cart => new
+                {
+                    cart.Name,
+                    cart.Description,
+                    cart.BasePrice,
+                    cart.Price,
+                    cart.PriceId,
+                    cart.Image,
+                    cart.Quantity,
+                    cart.Size,
+                    cart.Color,
+                    cart.ProductId,
+                    cart.VariantId,
+                    cart.FirstItem,
+                    cart.AdditionalItems,
+                    cart.BlueprintId,
+                    cart.PrintProviderId,
+
+                }).ToList();
+
+                return Ok(findUserCart);
+            }
+
+            return BadRequest("No user found");
+        }
+
+
         [HttpPost]
         [Route("create-cart")]
         public async Task<IActionResult> CreateCart(string userId, [FromBody] CartDto cart)
