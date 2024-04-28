@@ -74,47 +74,41 @@ namespace patchikatcha_backend.Controllers
 
                         var deserializedData = JsonSerializer.Deserialize<BlueprintDto>(data);
 
-                        var findCountry = deserializedData.Profiles.FirstOrDefault(profile => profile.countries.Contains(userCountry));
+                        var findCountry = deserializedData.Profiles.FirstOrDefault(profile => profile.countries.Contains(findUser.UserCountry));
 
-                        if (findCountry.first_item.cost == item.FirstItem && findCountry.additional_items.cost == item.AdditionalItems)
-                        {
-                            var findCartItem = authDbContext.Carts.FirstOrDefault(cart => cart.ApplicationUserId == userId && cart.Name == item.Name && cart.BlueprintId == item.BlueprintId && cart.PrintProviderId == item.PrintProviderId);
+                        var findCartItem = authDbContext.Carts.FirstOrDefault(cart => cart.ApplicationUserId == userId && cart.Name == item.Name && cart.BlueprintId == item.BlueprintId && cart.PrintProviderId == item.PrintProviderId);
                             
-                            if (findCartItem != null)
-                            {
-                                findCartItem.Quantity = findCartItem.Quantity + item.Quantity;
-                                await authDbContext.SaveChangesAsync();
+                        if (findCartItem != null)
+                        {
+                                
+                            findCartItem.Quantity = findCartItem.Quantity + item.Quantity;
+                            await authDbContext.SaveChangesAsync();
 
-                            } else
+                        } else
+                        {
+                            authDbContext.Carts.Add(new Cart
                             {
-                                authDbContext.Carts.Add(new Cart
-                                {
-                                    ApplicationUserId = userId,
-                                    Name = item.Name,
-                                    Description = item.Description,
-                                    BasePrice = item.BasePrice,
-                                    Price = item.Price,
-                                    PriceId = item.PriceId,
-                                    Image = item.Image,
-                                    Quantity = item.Quantity,
-                                    Size = (int)item.Size,
-                                    Color = (int)item.Color,
-                                    ProductId = item.ProductId,
-                                    VariantId = item.VariantId,
-                                    FirstItem = item.FirstItem,
-                                    AdditionalItems = item.AdditionalItems,
-                                    BlueprintId = item.BlueprintId,
-                                    PrintProviderId = item.PrintProviderId,
-                                });
+                                ApplicationUserId = userId,
+                                Name = item.Name,
+                                Description = item.Description,
+                                BasePrice = item.BasePrice,
+                                Price = item.Price,
+                                PriceId = item.PriceId,
+                                Image = item.Image,
+                                Quantity = item.Quantity,
+                                Size = (int)item.Size,
+                                Color = (int)item.Color,
+                                ProductId = item.ProductId,
+                                VariantId = item.VariantId,
+                                FirstItem = findCountry.first_item.cost,
+                                AdditionalItems = findCountry.additional_items.cost,
+                                BlueprintId = item.BlueprintId,
+                                PrintProviderId = item.PrintProviderId,
+                            });
 
                                 await authDbContext.SaveChangesAsync();
                             }
                         }
-                        else
-                        {
-                            return BadRequest("I see what you did");
-                        }
-                    }
                     else
                     {
                         return BadRequest("No product found");
@@ -231,7 +225,7 @@ namespace patchikatcha_backend.Controllers
 
                         var deserializedData = JsonSerializer.Deserialize<BlueprintDto>(data);
 
-                        var findCountry = deserializedData.Profiles.FirstOrDefault(profile => profile.countries.Contains(item.UserCountryCode));
+                        var findCountry = deserializedData.Profiles.FirstOrDefault(profile => profile.countries.Contains(findUser.UserCountry));
 
                         var findItem = authDbContext.Carts.Where(cart => cart.BlueprintId == item.BlueprintId && cart.PrintProviderId == item.PrintProviderId && cart.ApplicationUserId == userId);
 
