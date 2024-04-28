@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
@@ -44,6 +45,7 @@ namespace patchikatcha_backend.Controllers
         }
 
         [HttpPost]
+        [Authorize]
         [Route("create-checkout-session")]
         public async Task<ActionResult> Create(string userId)
         {

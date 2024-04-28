@@ -25,6 +25,7 @@ namespace patchikatcha_backend.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         [Route("grab-orders-id")]
         public async Task<IActionResult> GrabOrdersId(string userEmail)
         {
@@ -53,6 +54,7 @@ namespace patchikatcha_backend.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         [Route("grab-user-orders")]
         public async Task<IActionResult> GrabUserOrders(string orderId)
         {

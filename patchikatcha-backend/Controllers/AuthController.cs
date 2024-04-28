@@ -156,6 +156,7 @@ namespace patchikatcha_backend.Controllers
         }
 
         [HttpPut]
+        [Authorize]
         [Route("update-user-country")]
         public async Task<IActionResult> UpdateUserCountry(string userId, string newCountry)
         {

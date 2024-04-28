@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -22,6 +23,7 @@ namespace patchikatcha_backend.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         [Route("grab-wishlist")]
         public async Task<IActionResult> GrabWishlist(string userId)
         {
@@ -39,6 +41,7 @@ namespace patchikatcha_backend.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         [Route("is-wishlisted")]
         public async Task<IActionResult> IsWishlisted(string userId, string productId)
         {
@@ -61,6 +64,7 @@ namespace patchikatcha_backend.Controllers
         }
 
         [HttpPost]
+        [Authorize]
         [Route("create-wishlist")]
         public async Task<IActionResult> CreateWishlist(string userId, WishlistDto wishlist)
         {
@@ -87,6 +91,7 @@ namespace patchikatcha_backend.Controllers
         }
 
         [HttpDelete]
+        [Authorize]
         [Route("remove-wishlist")]
         public async Task<IActionResult> RemoveWishlist(string userId, string productId)
         {

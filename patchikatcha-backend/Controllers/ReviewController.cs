@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -62,6 +63,7 @@ namespace patchikatcha_backend.Controllers
         }
 
         [HttpPost]
+        [Authorize]
         [Route("create-review")]
         public async Task<IActionResult> CreateReview(ReviewDto review)
         {
@@ -83,6 +85,7 @@ namespace patchikatcha_backend.Controllers
         }
 
         [HttpDelete]
+        [Authorize]
         [Route("delete-review")]
         public async Task<IActionResult> DeleteReview(string userId, int Id)
         {

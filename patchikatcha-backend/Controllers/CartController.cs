@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -31,7 +32,7 @@ namespace patchikatcha_backend.Controllers
 
         [HttpPut]
         [Route("grab-user-cart")]
-        public async Task<IActionResult> GrabUserCart(string userId, string userCountry, [FromBody] CartDto[] cart)
+        public async Task<IActionResult> GrabUserCart(string userId, [FromBody] CartDto[] cart)
         {
             var findUser = await userManager.FindByIdAsync(userId);
 
@@ -144,6 +145,7 @@ namespace patchikatcha_backend.Controllers
 
 
         [HttpPost]
+        [Authorize]
         [Route("create-cart")]
         public async Task<IActionResult> CreateCart(string userId, [FromBody] CartDto cart)
         {
@@ -181,6 +183,7 @@ namespace patchikatcha_backend.Controllers
         }
 
         [HttpPut]
+        [Authorize]
         [Route("update-cart")]
         public async Task<IActionResult> UpdateCart(string userId, [FromBody] CartDto cart)
         {
@@ -199,6 +202,7 @@ namespace patchikatcha_backend.Controllers
         }
 
         [HttpPut]
+        [Authorize]
         [Route("update-cart-shipping")]
         public async Task<IActionResult> UpdateCartShipping(string userId, CartBlueprintDto[] cartBlueprint)
         {
@@ -276,6 +280,7 @@ namespace patchikatcha_backend.Controllers
         }
 
         [HttpDelete]
+        [Authorize]
         [Route("remove-cart")]
         public async Task<IActionResult> RemoveCart(string userId, [FromBody] CartDto cart)
         {
