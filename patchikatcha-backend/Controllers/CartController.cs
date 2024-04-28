@@ -31,7 +31,7 @@ namespace patchikatcha_backend.Controllers
 
         [HttpPut]
         [Route("grab-user-cart")]
-        public async Task<IActionResult> GrabUserCart(string userId, CartDto[] cart)
+        public async Task<IActionResult> GrabUserCart(string userId, string userCountry, [FromBody] CartDto[] cart)
         {
             var findUser = await userManager.FindByIdAsync(userId);
 
@@ -41,20 +41,19 @@ namespace patchikatcha_backend.Controllers
                 {
                     cart.Name,
                     cart.Description,
-                    cart.BasePrice,
+                    base_price = cart.BasePrice,
                     cart.Price,
-                    cart.PriceId,
+                    price_id = cart.PriceId,
                     cart.Image,
                     cart.Quantity,
                     cart.Size,
                     cart.Color,
-                    cart.ProductId,
-                    cart.VariantId,
-                    cart.FirstItem,
-                    cart.AdditionalItems,
-                    cart.BlueprintId,
-                    cart.PrintProviderId,
-
+                    product_id = cart.ProductId,
+                    variant_id = cart.VariantId,
+                    first_item = cart.FirstItem,
+                    additional_items = cart.AdditionalItems,
+                    blueprint_id = cart.BlueprintId,
+                    print_provider_id = cart.PrintProviderId,
                 }).ToList();
 
                 return Ok(findUserCart);
@@ -75,7 +74,7 @@ namespace patchikatcha_backend.Controllers
 
                         var deserializedData = JsonSerializer.Deserialize<BlueprintDto>(data);
 
-                        var findCountry = deserializedData.Profiles.FirstOrDefault(profile => profile.countries.Contains(item.UserCountry));
+                        var findCountry = deserializedData.Profiles.FirstOrDefault(profile => profile.countries.Contains(userCountry));
 
                         if (findCountry.first_item.cost == item.FirstItem && findCountry.additional_items.cost == item.AdditionalItems)
                         {
@@ -113,11 +112,12 @@ namespace patchikatcha_backend.Controllers
                         }
                         else
                         {
-                            BadRequest("I see what you did");
+                            return BadRequest("I see what you did");
                         }
-                    } else
+                    }
+                    else
                     {
-                        BadRequest("No product found");
+                        return BadRequest("No product found");
                     }
                 }
 
@@ -127,20 +127,19 @@ namespace patchikatcha_backend.Controllers
                 {
                     cart.Name,
                     cart.Description,
-                    cart.BasePrice,
+                    base_price = cart.BasePrice,
                     cart.Price,
-                    cart.PriceId,
+                    price_id = cart.PriceId,
                     cart.Image,
                     cart.Quantity,
                     cart.Size,
                     cart.Color,
-                    cart.ProductId,
-                    cart.VariantId,
-                    cart.FirstItem,
-                    cart.AdditionalItems,
-                    cart.BlueprintId,
-                    cart.PrintProviderId,
-
+                    product_id = cart.ProductId,
+                    variant_id = cart.VariantId,
+                    first_item = cart.FirstItem,
+                    additional_items = cart.AdditionalItems,
+                    blueprint_id = cart.BlueprintId,
+                    print_provider_id = cart.PrintProviderId,
                 }).ToList();
 
                 return Ok(findUserCart);
