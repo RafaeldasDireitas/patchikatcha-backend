@@ -25,9 +25,11 @@ namespace patchikatcha_backend.Controllers
 
         [HttpGet]
         [Route("grab-product-reviews")]
-        public async Task<IActionResult> GrabProductReviews(string productId, int limit)
+        public async Task<IActionResult> GrabProductReviews(string productId, int limit, int page)
         {
-            var reviews = authDbContext.Reviews.Where(review => review.ProductId == productId).OrderByDescending(review => review.Id).Take(limit).Select(review => new
+            int skipReviews = limit * page;
+
+            var reviews = authDbContext.Reviews.Where(review => review.ProductId == productId).OrderByDescending(review => review.Id).Skip(skipReviews).Take(limit).Select(review => new
             {
                 review.Id,
                 review.Title,
@@ -37,9 +39,11 @@ namespace patchikatcha_backend.Controllers
                 Username = review.ApplicationUser.UserName,
             }).ToList();
 
+            var reviewsCount = authDbContext.Reviews.Where(review => review.ProductId == productId).Count();
+
             if (reviews != null)
             {
-                return Ok(reviews);
+                return Ok(new { reviews = reviews, reviewsCount =  reviewsCount});
             }
 
             return BadRequest("No reviews for this product");
@@ -67,6 +71,12 @@ namespace patchikatcha_backend.Controllers
         [Route("create-review")]
         public async Task<IActionResult> CreateReview(ReviewDto review)
         {
+            var findReview = authDbContext.Reviews.FirstOrDefault(reviews => reviews.Title == review.Title);
+
+            if (findReview != null)
+            {
+                return BadRequest(new { message = "Review title already exists"});
+            }
 
             var createReview = new Review
             {

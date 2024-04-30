@@ -31,7 +31,7 @@ namespace patchikatcha_backend.Controllers
         {
             var apiKey = configuration["PRINTIFY_API"];
             var shopId = configuration["PRINTIFY_SHOP_ID"];
-            int limit = 6;
+            int limit = 8;
 
             client.DefaultRequestHeaders.Add("Authorization", apiKey);
 
