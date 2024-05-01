@@ -11,8 +11,8 @@ namespace patchikatcha_backend.Models
         public string Name { get; set; }
         public string Description { get; set; }
         public int Quantity { get; set; }
-        public int Size { get; set; }
-        public int Color { get; set; }
+        public int? Size { get; set; }
+        public int? Color { get; set; }
         public string Image { get; set; }
         public int BasePrice { get; set; }
         public int Price { get; set; }

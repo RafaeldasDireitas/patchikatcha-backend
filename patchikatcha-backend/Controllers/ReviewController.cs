@@ -29,7 +29,11 @@ namespace patchikatcha_backend.Controllers
         {
             int skipReviews = limit * page;
 
-            var reviews = authDbContext.Reviews.Where(review => review.ProductId == productId).OrderByDescending(review => review.Id).Skip(skipReviews).Take(limit).Select(review => new
+            var reviews = authDbContext.Reviews.Where(review => review.ProductId == productId);
+
+            var reviewsCount = await reviews.CountAsync();
+
+            var grabReviews = await reviews.OrderByDescending(review => review.Id).Skip(skipReviews).Take(limit).Select(review => new
             {
                 review.Id,
                 review.Title,
@@ -37,13 +41,11 @@ namespace patchikatcha_backend.Controllers
                 review.Rating,
                 review.CreatedAt,
                 Username = review.ApplicationUser.UserName,
-            }).ToList();
-
-            var reviewsCount = authDbContext.Reviews.Where(review => review.ProductId == productId).Count();
+            }).ToListAsync();
 
             if (reviews != null)
             {
-                return Ok(new { reviews = reviews, reviewsCount =  reviewsCount});
+                return Ok(new { reviews = grabReviews, reviewsCount =  reviewsCount});
             }
 
             return BadRequest("No reviews for this product");
