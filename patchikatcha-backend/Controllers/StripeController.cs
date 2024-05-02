@@ -2,6 +2,7 @@
 using System.Diagnostics.Metrics;
 using System.Drawing;
 using System.Reflection.Metadata;
+using System.Security.Policy;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -136,7 +137,7 @@ namespace patchikatcha_backend.Controllers
 
                     var metadataKey = item.VariantId.ToString() + "_" + firstTenChars;
 
-                    options.Metadata.Add(metadataKey, item.VariantId.ToString());
+                    options.Metadata.Add(metadataKey, item.PrintProviderId.ToString());
                 }
 
                 var service = new SessionService();
@@ -256,34 +257,7 @@ namespace patchikatcha_backend.Controllers
                         firstName = nameArray[0];
                         lastName = nameArray.Length == 1 ? firstName : nameArray[^1];
 
-                        string externalId = Guid.NewGuid().ToString();
-                        string label1 = Guid.NewGuid().ToString().Substring(0, 3);
-                        string label2 = Guid.NewGuid().ToString().Substring(0, 2);
-                        string labelName = label1 + label2;
-
-                        var printifyOrder = new PrintifyOrderCreateDto()
-                        {
-                            external_id = externalId,
-                            label = "Order-" + labelName, //add 2 guids and grab only 3 chars of each
-                            line_items = new List<line_items>(),
-                            shipping_method = 1,
-                            is_printify_express = false,
-                            send_shipping_notification = false,
-                            address_to = new address_to()
-                            {
-                                first_name = firstName,
-                                last_name = lastName,
-                                email = checkoutSession.CustomerEmail,
-                                phone = "",
-                                country = shippingDetails.Address.Country,
-                                region = shippingDetails.Address.City,
-                                address1 = shippingDetails.Address.Line1,
-                                address2 = shippingDetails.Address.Line2,
-                                city = shippingDetails.Address.City,
-                                zip = shippingDetails.Address.PostalCode
-                            }
-
-                        };
+                        var printifyOrderList = new List<PrintifyOrderCreateDto>();
 
                         var sortedMetadata = metaData.Reverse();
                         var metaDataEnumerator = sortedMetadata.GetEnumerator();
@@ -294,39 +268,101 @@ namespace patchikatcha_backend.Controllers
 
                             // Get the metadata key-value pair for the current line item
                             var kv = metaDataEnumerator.Current;
+                            var printProviderId = kv.Value;
 
-                            var variantId = Convert.ToInt32(kv.Value.Split("_")[0]);
+                            var variantId = Convert.ToInt32(kv.Key.Split("_")[0]);
 
-                            var lineItem = new line_items()
+                            // Try to find an existing printify order with the same print provider ID
+                            var existingPrintifyOrder = printifyOrderList.FirstOrDefault(order => order.print_provider_id == printProviderId);
+
+                            if (existingPrintifyOrder != null)
                             {
-                                product_id = item.Price.LookupKey,
-                                variant_id = variantId,
-                                quantity = (int)item.Quantity,
-                             };
+                                // If an existing printify order is found, add the line item to it
+                                var lineItem = new line_items()
+                                {
+                                    product_id = item.Price.LookupKey,
+                                    variant_id = variantId,
+                                    quantity = (int)item.Quantity,
+                                };
 
-                                printifyOrder.line_items.Add(lineItem);
-                
+                                existingPrintifyOrder.line_items.Add(lineItem);
+                            }
+                            else
+                            {
+                                string label1 = Guid.NewGuid().ToString().Substring(0, 3);
+                                string label2 = Guid.NewGuid().ToString().Substring(0, 2);
+                                string labelName = label1 + label2;
+
+                                // If no existing printify order is found, create a new one and add the line item to it
+                                var newPrintifyOrder = new PrintifyOrderCreateDto
+                                {
+                                    external_id = Guid.NewGuid().ToString(),
+                                    label = "Order-" + labelName, //add 2 guids and grab only 3 chars of each
+                                    line_items = new List<line_items>(),
+                                    shipping_method = 1,
+                                    is_printify_express = false,
+                                    send_shipping_notification = false,
+                                    address_to = new address_to()
+                                    {
+                                        first_name = firstName,
+                                        last_name = lastName,
+                                        email = checkoutSession.CustomerEmail,
+                                        phone = "",
+                                        country = shippingDetails.Address.Country,
+                                        region = shippingDetails.Address.City,
+                                        address1 = shippingDetails.Address.Line1,
+                                        address2 = shippingDetails.Address.Line2,
+                                        city = shippingDetails.Address.City,
+                                        zip = shippingDetails.Address.PostalCode
+                                    },
+                                    print_provider_id = printProviderId
+                                };
+
+                                var lineItem = new line_items()
+                                {
+                                    product_id = item.Price.LookupKey,
+                                    variant_id = variantId,
+                                    quantity = (int)item.Quantity,
+                                };
+
+                                newPrintifyOrder.line_items.Add(lineItem);
+
+                                // Add the new printify order to the list
+                                printifyOrderList.Add(newPrintifyOrder);
+                            }
                         }
 
-                        var url = $"https://api.printify.com/v1/shops/{shopId}/orders.json";
-                        var jsonOrder = JsonSerializer.Serialize(printifyOrder);
-                        var content = new StringContent(jsonOrder, Encoding.UTF8, "application/json");
-                        HttpResponseMessage response = await client.PostAsync(url, content);
-                        string responseContent = await response.Content.ReadAsStringAsync();
-                        JsonDocument doc = JsonDocument.Parse(responseContent);
-                        JsonElement root = doc.RootElement;
-                        string orderId = root.GetProperty("id").GetString();
-
-                        if (response.IsSuccessStatusCode)
+                        foreach (var order in printifyOrderList)
                         {
-                            var order = new Models.Order()
-                            {
-                                OrderId = orderId,
-                                UserEmail = userEmail,
-                            };
+                            var jsonOrder = JsonSerializer.Serialize(order);
+                            var content = new StringContent(jsonOrder, Encoding.UTF8, "application/json");
+                            var url = $"https://api.printify.com/v1/shops/{shopId}/orders.json";
 
-                            var createOrder = await authDbContext.AddAsync(order);
-                            await authDbContext.SaveChangesAsync();
+                            HttpResponseMessage response = await client.PostAsync(url, content);
+
+                            if (response.IsSuccessStatusCode)
+                            {
+                                string responseContent = await response.Content.ReadAsStringAsync();
+                                JsonDocument doc = JsonDocument.Parse(responseContent);
+                                JsonElement root = doc.RootElement;
+                                string orderId = root.GetProperty("id").GetString();
+
+                                var newOrder = new Models.Order()
+                                {
+                                    OrderId = orderId,
+                                    UserEmail = userEmail,
+                                };
+
+                                await authDbContext.AddAsync(newOrder);
+                                await authDbContext.SaveChangesAsync();
+                            }
+                            else
+                            {
+                                // Log the response content when a 500 error occurs
+                                Console.WriteLine($"Failed to create order. Status code: {response.StatusCode}");
+                                string responseContent = await response.Content.ReadAsStringAsync();
+                                Console.WriteLine($"Response content: {responseContent}");
+                            }
                         }
 
                     }
@@ -344,6 +380,5 @@ namespace patchikatcha_backend.Controllers
                 return BadRequest();
             }
         }
-
     }
 }
