@@ -158,13 +158,13 @@ namespace patchikatcha_backend.Controllers
         [HttpPut]
         [Authorize]
         [Route("update-user-country")]
-        public async Task<IActionResult> UpdateUserCountry(string userId, string newCountry)
+        public async Task<IActionResult> UpdateUserCountry(string userId, [FromBody] string newCountry)
         {
             var user = await userManager.FindByIdAsync(userId);
 
             user.UserCountry = newCountry;
 
-            var result = await userManager.UpdateAsync(user);
+            await userManager.UpdateAsync(user);
             await authDbContext.SaveChangesAsync();
 
             return Ok("Saved");
