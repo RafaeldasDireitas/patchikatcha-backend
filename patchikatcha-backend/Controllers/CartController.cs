@@ -149,7 +149,7 @@ namespace patchikatcha_backend.Controllers
         [Route("create-cart")]
         public async Task<IActionResult> CreateCart(string userId, [FromBody] CartDto cart)
         {
-            var findCartItem = authDbContext.Carts.FirstOrDefault(cartInDb => cartInDb.Name == cart.Name && cartInDb.Size == cart.Size && cartInDb.Color == cart.Color);
+            var findCartItem = authDbContext.Carts.FirstOrDefault(cartInDb => cartInDb.ApplicationUserId == userId && cartInDb.Name == cart.Name && cartInDb.Size == cart.Size && cartInDb.Color == cart.Color);
 
             if (findCartItem == null)
             {

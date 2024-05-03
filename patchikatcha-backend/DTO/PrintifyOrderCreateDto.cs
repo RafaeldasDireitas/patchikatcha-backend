@@ -7,11 +7,9 @@
         public List<line_items> line_items { get; set; }
         public int shipping_method { get; set; }
         public bool is_printify_express { get; set; }
+        public bool is_economy_shipping { get; set; }
         public bool send_shipping_notification {  get; set; }
         public address_to address_to { get; set; }
-        public string? print_provider_id { get; set; }
-
-        
     }
 
     public class line_items

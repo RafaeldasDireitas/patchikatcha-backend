@@ -75,13 +75,35 @@ namespace patchikatcha_backend.Controllers
                 }
 
                 var domain = "http://localhost:3000/checkout/order-successful";
+
+                var customerService = new CustomerService();
+                var existingCustomers = customerService.ListAutoPaging(new CustomerListOptions { Email = findUser.Email });
+
+                Customer customer;
+
+                if (existingCustomers.Any())
+                {
+                    // Use existing customer if found
+                    customer = existingCustomers.FirstOrDefault();
+                }
+                else
+                {
+                    // Create new customer in Stripe
+                    var customerOptions = new CustomerCreateOptions
+                    {
+                        Email = findUser.Email,
+                    };
+                    customer = await customerService.CreateAsync(customerOptions);
+                }
+
                 var options = new SessionCreateOptions
                 {
-                    CustomerEmail = findUser.Email,
+                    Customer = customer.Id,
                     UiMode = "embedded",
                     LineItems = new List<SessionLineItemOptions>(),
                     Metadata = new Dictionary<string, string>(),
                     Mode = "payment",
+                    AllowPromotionCodes = true,
                     ReturnUrl = domain,
                     Locale = "auto",
                     BillingAddressCollection = "required",
@@ -92,6 +114,10 @@ namespace patchikatcha_backend.Controllers
                     AutomaticTax = new SessionAutomaticTaxOptions
                     {
                         Enabled = true
+                    },
+                    CustomerUpdate = new SessionCustomerUpdateOptions
+                    {
+                        Shipping = "auto",
                     },
                     ShippingOptions = new List<SessionShippingOptionOptions>
                 {
@@ -343,6 +369,7 @@ namespace patchikatcha_backend.Controllers
                             line_items = new List<line_items>(),
                             shipping_method = 1,
                             is_printify_express = false,
+                            is_economy_shipping = false,
                             send_shipping_notification = false,
                             address_to = new address_to()
                             {
