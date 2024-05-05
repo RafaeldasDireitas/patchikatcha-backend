@@ -51,9 +51,9 @@ namespace patchikatcha_backend.Controllers
 
         [HttpGet]
         [Route("grab-category-products")]
-        public async Task<IActionResult> GrabCategoryProducts(int limit, int pageNumber, string productTag)
+        public async Task<IActionResult> GrabCategoryProducts(string categoryName)
         {
-            if (memoryCache.TryGetValue(productTag, out ProductCategoryDto products))
+            if (memoryCache.TryGetValue(categoryName, out ProductCategoryDto products))
             {
                 return Ok(products);
             }
@@ -63,7 +63,7 @@ namespace patchikatcha_backend.Controllers
 
             client.DefaultRequestHeaders.Add("Authorization", apiKey);
 
-            string url = $"https://api.printify.com/v1/shops/{shopId}/products.json?limit={limit}&page={pageNumber}";
+            string url = $"https://api.printify.com/v1/shops/{shopId}/products.json";
 
             HttpResponseMessage response = await client.GetAsync(url);
 
@@ -71,10 +71,10 @@ namespace patchikatcha_backend.Controllers
 
             ProductCategoryDto productCategory = JsonSerializer.Deserialize<ProductCategoryDto>(jsonResponse);
 
-            var findProducts = productCategory.Data.Where(product => product.Tags.Contains($"{productTag}")).ToList();
+            var findProducts = productCategory.Data.Where(product => product.Tags.Contains($"{categoryName}")).ToList();
             var jsonContent = JsonSerializer.Serialize(findProducts);
 
-            memoryCache.Set(productTag, jsonContent, TimeSpan.FromSeconds(60));
+            memoryCache.Set(categoryName, jsonContent, TimeSpan.FromSeconds(60));
 
             return Ok(jsonContent);
 
@@ -128,40 +128,6 @@ namespace patchikatcha_backend.Controllers
             memoryCache.Set(productId, jsonProduct, TimeSpan.FromMinutes(1));
 
             return Ok(jsonProduct);
-        }
-
-        [HttpPost]
-        [Route("publish-product")]
-        [Authorize(Roles = "Admin")]
-        public async Task<ActionResult> PublishProduct([FromBody] string productId)
-        {
-            var apiKey = configuration["PRINTIFY_API"];
-            var shopId = configuration["PRINTIFY_SHOP_ID"];
-
-            client.DefaultRequestHeaders.Add("Authorization", apiKey);
-
-            var url = $"https://api.printify.com/v1/shops/{shopId}/products/{productId}/publishing_succeeded.json";
-
-            var dataBody = new
-            {
-                external = new
-                {
-                    id = productId,
-                    handle = "http://localhost:3000",
-                }
-            };
-
-            var jsonDataBody = JsonSerializer.Serialize(dataBody);
-            var content = new StringContent(jsonDataBody, Encoding.UTF8, "application/json");
-
-            HttpResponseMessage response = await client.PostAsync(url, content);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                return BadRequest("Product wasn't published");
-            }
-
-            return Ok("Product published");
         }
     }
 }
