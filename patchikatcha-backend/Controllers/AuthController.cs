@@ -8,6 +8,7 @@ using patchikatcha_backend.Data;
 using patchikatcha_backend.DTO;
 using patchikatcha_backend.Models;
 using patchikatcha_backend.Repositories;
+using System.Text;
 using System.Text.Json;
 using System.Web;
 
@@ -20,12 +21,14 @@ namespace patchikatcha_backend.Controllers
         private readonly UserManager<ApplicationUser> userManager;
         private readonly IToken tokenRepository;
         private readonly AuthDbContext authDbContext;
+        private readonly HttpClient client;
 
-        public AuthController(UserManager<ApplicationUser> userManager, IToken tokenRepository, AuthDbContext authDbContext)
+        public AuthController(UserManager<ApplicationUser> userManager, IToken tokenRepository, AuthDbContext authDbContext, HttpClient client)
         {
             this.userManager = userManager;
             this.tokenRepository = tokenRepository;
             this.authDbContext = authDbContext;
+            this.client = client;
         }
 
         [HttpPost]
@@ -56,6 +59,19 @@ namespace patchikatcha_backend.Controllers
         [Route("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
         {
+            var googleRequest = new
+            {
+                secret = "6Ld74NIpAAAAAMe_24uYeE85Gj3Fqys7lRVeIV8a",
+                response = loginDto.ApiKey
+            };
+
+            var jsonRequest = JsonSerializer.Serialize(googleRequest);
+            var content = new StringContent(jsonRequest, Encoding.UTF8, "application/x-www-form-urlencoded");
+            var url = $"https://www.google.com/recaptcha/api/siteverify?secret=6Ld74NIpAAAAAMe_24uYeE85Gj3Fqys7lRVeIV8a&response={loginDto.ApiKey}";
+
+            HttpResponseMessage response = await client.PostAsync(url, content);
+            var responseBody = await response.Content.ReadAsStringAsync();
+
             var user = await userManager.FindByEmailAsync(loginDto.Email);
 
             if (user == null)
@@ -83,6 +99,7 @@ namespace patchikatcha_backend.Controllers
             {
                 jwtToken = jwtToken,
                 userId = user.Id,
+                verificationResponse = responseBody
             };
 
             return Ok(tokenResponse);
