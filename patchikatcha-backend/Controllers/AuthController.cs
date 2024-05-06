@@ -31,10 +31,18 @@ namespace patchikatcha_backend.Controllers
             this.client = client;
         }
 
+        
+
         [HttpPost]
         [Route("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto registerDto)
         {
+            string responseBody = await GoogleRequest(registerDto.ApiKey);
+
+            if (responseBody.Contains("false"))
+            {
+                return BadRequest(new { message = "reCAPTCHA verification failed, try again." });
+            }
 
             var applicationUser = new ApplicationUser
             {
@@ -52,45 +60,39 @@ namespace patchikatcha_backend.Controllers
 
             await userManager.AddToRolesAsync(applicationUser, ["User"]);
 
-            return Ok("User registered");
+            return Ok("Account created");
         }
 
         [HttpPost]
         [Route("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
         {
-            var googleRequest = new
+            string responseBody = await GoogleRequest(loginDto.ApiKey);
+
+            if (responseBody.Contains("false"))
             {
-                secret = "6Ld74NIpAAAAAMe_24uYeE85Gj3Fqys7lRVeIV8a",
-                response = loginDto.ApiKey
-            };
-
-            var jsonRequest = JsonSerializer.Serialize(googleRequest);
-            var content = new StringContent(jsonRequest, Encoding.UTF8, "application/x-www-form-urlencoded");
-            var url = $"https://www.google.com/recaptcha/api/siteverify?secret=6Ld74NIpAAAAAMe_24uYeE85Gj3Fqys7lRVeIV8a&response={loginDto.ApiKey}";
-
-            HttpResponseMessage response = await client.PostAsync(url, content);
-            var responseBody = await response.Content.ReadAsStringAsync();
+                return BadRequest(new { message = "reCAPTCHA verification failed, try again." });
+            }
 
             var user = await userManager.FindByEmailAsync(loginDto.Email);
 
             if (user == null)
             {
-                return BadRequest("No user found.");
+                return BadRequest(new { message =  "Credentials are wrong, try again" });
             }
 
             var password = await userManager.CheckPasswordAsync(user, loginDto.Password);
 
             if (!password)
             {
-                return BadRequest("Password doesn't match.");
+                return BadRequest(new { message = "Credentials are wrong, try again" });
             }
 
             var roles = await userManager.GetRolesAsync(user);
 
             if (roles == null)
             {
-                return BadRequest("No roles");
+                return BadRequest(new { message = "Credentials are wrong, try again" });
             }
 
             var jwtToken = tokenRepository.CreateJTWToken(user, roles.ToList());
@@ -99,10 +101,29 @@ namespace patchikatcha_backend.Controllers
             {
                 jwtToken = jwtToken,
                 userId = user.Id,
-                verificationResponse = responseBody
             };
 
             return Ok(tokenResponse);
+        }
+
+        [HttpGet] // Use HttpGet attribute for GoogleRequest method
+        [Route("google-request")]
+        public async Task<string> GoogleRequest(string apiKey)
+        {
+            var googleRequest = new
+            {
+                secret = "6Ld74NIpAAAAAMe_24uYeE85Gj3Fqys7lRVeIV8a",
+                response = apiKey
+            };
+
+            var jsonRequest = JsonSerializer.Serialize(googleRequest);
+            var content = new StringContent(jsonRequest, Encoding.UTF8, "application/x-www-form-urlencoded");
+            var url = $"https://www.google.com/recaptcha/api/siteverify?secret=6Ld74NIpAAAAAMe_24uYeE85Gj3Fqys7lRVeIV8a&response={apiKey}";
+
+            HttpResponseMessage response = await client.PostAsync(url, content);
+            var responseBody = await response.Content.ReadAsStringAsync();
+
+            return responseBody;
         }
 
         [HttpGet]

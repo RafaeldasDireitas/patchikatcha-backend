@@ -384,7 +384,6 @@ namespace patchikatcha_backend.Controllers
                                 city = shippingDetails.Address.City,
                                 zip = shippingDetails.Address.PostalCode
                             }
-
                         };
 
                         var sortedMetadata = metaData.Reverse();
