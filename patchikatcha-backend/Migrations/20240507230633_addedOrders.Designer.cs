@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using patchikatcha_backend.Data;
@@ -11,9 +12,11 @@ using patchikatcha_backend.Data;
 namespace patchikatcha_backend.Migrations
 {
     [DbContext(typeof(AuthDbContext))]
-    partial class AuthDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240507230633_addedOrders")]
+    partial class addedOrders
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -309,34 +312,6 @@ namespace patchikatcha_backend.Migrations
                     b.ToTable("Carts");
                 });
 
-            modelBuilder.Entity("patchikatcha_backend.Models.LineItem", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<Guid>("OrderId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("ProductId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("Quantity")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("VariantId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("OrderId");
-
-                    b.ToTable("LineItems");
-                });
-
             modelBuilder.Entity("patchikatcha_backend.Models.Order", b =>
                 {
                     b.Property<Guid>("Id")
@@ -530,17 +505,6 @@ namespace patchikatcha_backend.Migrations
                     b.Navigation("ApplicationUser");
                 });
 
-            modelBuilder.Entity("patchikatcha_backend.Models.LineItem", b =>
-                {
-                    b.HasOne("patchikatcha_backend.Models.Order", "Order")
-                        .WithMany("LineItems")
-                        .HasForeignKey("OrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Order");
-                });
-
             modelBuilder.Entity("patchikatcha_backend.Models.Review", b =>
                 {
                     b.HasOne("patchikatcha_backend.Models.ApplicationUser", "ApplicationUser")
@@ -570,11 +534,6 @@ namespace patchikatcha_backend.Migrations
                     b.Navigation("Review");
 
                     b.Navigation("Wishlist");
-                });
-
-            modelBuilder.Entity("patchikatcha_backend.Models.Order", b =>
-                {
-                    b.Navigation("LineItems");
                 });
 #pragma warning restore 612, 618
         }

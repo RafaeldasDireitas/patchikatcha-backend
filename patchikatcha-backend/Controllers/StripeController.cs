@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
@@ -23,6 +24,7 @@ using patchikatcha_backend.Models;
 using Stripe;
 using Stripe.Checkout;
 using Stripe.Climate;
+using static System.Net.WebRequestMethods;
 
 namespace patchikatcha_backend.Controllers
 {
@@ -34,8 +36,9 @@ namespace patchikatcha_backend.Controllers
         private readonly IConfiguration configuration;
         private readonly AuthDbContext authDbContext;
         private readonly UserManager<ApplicationUser> userManager;
+        private readonly IMemoryCache memoryCache;
 
-        public StripeController(HttpClient client, IConfiguration configuration, AuthDbContext authDbContext, UserManager<ApplicationUser> userManager)
+        public StripeController(HttpClient client, IConfiguration configuration, AuthDbContext authDbContext, UserManager<ApplicationUser> userManager, IMemoryCache memoryCache)
         {
 
             StripeConfiguration.ApiKey = "sk_test_51Onkz6Lwv2BbZpNwYDF8RzBVcmiQAZ59EeoWeBEYD3WJTRmhakFtyUR1tAJcCp4Vrr9mKhxzJARNA0rEPyfyofWV00cISXaGE8";
@@ -244,10 +247,6 @@ namespace patchikatcha_backend.Controllers
         public async Task<IActionResult> WebhookPaymentCollected()
         {
             const string endpointSecret = "whsec_34670d831291649de50799b6d4a8d94cb1a4610fcc6f211436c25a53e2ad1947";
-            var apiKey = configuration["PRINTIFY_API"];
-            var shopId = configuration["PRINTIFY_SHOP_ID"];
-
-            client.DefaultRequestHeaders.Add("Authorization", apiKey);
 
             var json = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
 
@@ -265,15 +264,15 @@ namespace patchikatcha_backend.Controllers
                         string sessionId = session.Id;
 
                             // Make an additional API call to retrieve the expanded Checkout Session object
-                        var options = new SessionGetOptions { Expand = new List<string> { "line_items" } };
+                        var options = new SessionGetOptions { Expand = new List<string> { "line_items", "customer" } };
                         var service = new SessionService();
                         var checkoutSession = service.Get(sessionId, options);
 
-                            // Access the line_items property from the expanded Checkout Session object
+                        // Access the line_items property from the expanded Checkout Session object
                         var lineItems = checkoutSession.LineItems.Data;
                         var shippingDetails = checkoutSession.ShippingDetails;
                         var metaData = checkoutSession.Metadata;
-                        var userEmail = checkoutSession.CustomerEmail;
+                        var userEmail = checkoutSession.Customer.Email;
                         string fullName = shippingDetails.Name;
                         string firstName;
                         string lastName;
@@ -283,86 +282,11 @@ namespace patchikatcha_backend.Controllers
                         firstName = nameArray[0];
                         lastName = nameArray.Length == 1 ? firstName : nameArray[^1];
 
-                        //var printifyOrderList = new List<PrintifyOrderCreateDto>();
-
-                        //var sortedMetadata = metaData.Reverse();
-                        //var metaDataEnumerator = sortedMetadata.GetEnumerator();
-                        //foreach (var item in lineItems)
-                        //{
-                        //    // Move to the next metadata entry
-                        //    metaDataEnumerator.MoveNext();
-
-                        //    // Get the metadata key-value pair for the current line item
-                        //    var kv = metaDataEnumerator.Current;
-                        //    var printProviderId = kv.Value;
-
-                        //    var variantId = Convert.ToInt32(kv.Key.Split("_")[0]);
-
-                        //    // Try to find an existing printify order with the same print provider ID
-                        //    var existingPrintifyOrder = printifyOrderList.FirstOrDefault(order => order.print_provider_id == printProviderId);
-
-                        //    if (existingPrintifyOrder != null)
-                        //    {
-                        //        // If an existing printify order is found, add the line item to it
-                        //        var lineItem = new line_items()
-                        //        {
-                        //            product_id = item.Price.LookupKey,
-                        //            variant_id = variantId,
-                        //            quantity = (int)item.Quantity,
-                        //        };
-
-                        //        existingPrintifyOrder.line_items.Add(lineItem);
-                        //    }
-                        //    else
-                        //    {
-                        //        string label1 = Guid.NewGuid().ToString().Substring(0, 3);
-                        //        string label2 = Guid.NewGuid().ToString().Substring(0, 2);
-                        //        string labelName = label1 + label2;
-
-                        //        // If no existing printify order is found, create a new one and add the line item to it
-                        //        var newPrintifyOrder = new PrintifyOrderCreateDto
-                        //        {
-                        //            external_id = Guid.NewGuid().ToString(),
-                        //            label = "Order-" + labelName, //add 2 guids and grab only 3 chars of each
-                        //            line_items = new List<line_items>(),
-                        //            shipping_method = 1,
-                        //            is_printify_express = false,
-                        //            send_shipping_notification = false,
-                        //            address_to = new address_to()
-                        //            {
-                        //                first_name = firstName,
-                        //                last_name = lastName,
-                        //                email = checkoutSession.CustomerEmail,
-                        //                phone = "",
-                        //                country = shippingDetails.Address.Country,
-                        //                region = shippingDetails.Address.City,
-                        //                address1 = shippingDetails.Address.Line1,
-                        //                address2 = shippingDetails.Address.Line2,
-                        //                city = shippingDetails.Address.City,
-                        //                zip = shippingDetails.Address.PostalCode
-                        //            },
-                        //            print_provider_id = printProviderId
-                        //        };
-
-                        //        var lineItem = new line_items()
-                        //        {
-                        //            product_id = item.Price.LookupKey,
-                        //            variant_id = variantId,
-                        //            quantity = (int)item.Quantity,
-                        //        };
-
-                        //        newPrintifyOrder.line_items.Add(lineItem);
-
-                        //        // Add the new printify order to the list
-                        //        printifyOrderList.Add(newPrintifyOrder);
-                        //    }
-                        //}
-
                         string label1 = Guid.NewGuid().ToString().Substring(0, 3);
                         string label2 = Guid.NewGuid().ToString().Substring(0, 2);
                         string labelName = label1 + label2;
 
-                        var printifyOrder = new PrintifyOrderCreateDto()
+                        var printifyOrderCreate = new PrintifyOrderCreateDto()
                         {
                             external_id = Guid.NewGuid().ToString(),
                             label = "Order-" + labelName, //add 2 guids and grab only 3 chars of each
@@ -375,7 +299,7 @@ namespace patchikatcha_backend.Controllers
                             {
                                 first_name = firstName,
                                 last_name = lastName,
-                                email = checkoutSession.CustomerEmail,
+                                email = userEmail,
                                 phone = "",
                                 country = shippingDetails.Address.Country,
                                 region = shippingDetails.Address.City,
@@ -384,6 +308,14 @@ namespace patchikatcha_backend.Controllers
                                 city = shippingDetails.Address.City,
                                 zip = shippingDetails.Address.PostalCode
                             }
+                        };
+
+                        var checkoutSessionData = new WebhookPaymentCompleteDto
+                        {
+                            lineItems = lineItems,
+                            shippingDetails = shippingDetails,
+                            metaData = metaData,
+                            fullName = fullName,
                         };
 
                         var sortedMetadata = metaData.Reverse();
@@ -405,42 +337,25 @@ namespace patchikatcha_backend.Controllers
                                 quantity = (int)item.Quantity,
                             };
 
-                            printifyOrder.line_items.Add(lineItem);
-
+                            printifyOrderCreate.line_items.Add(lineItem);
                         }
 
-                        //foreach (var order in printifyOrderList)
+                        //var createOrderDb = new Models.Order
                         //{
-                            var jsonOrder = JsonSerializer.Serialize(printifyOrder);
-                            var content = new StringContent(jsonOrder, Encoding.UTF8, "application/json");
-                            var url = $"https://api.printify.com/v1/shops/{shopId}/orders.json";
+                        //    UserEmail = userEmail,
+                        //    ExternalId = Guid.NewGuid().ToString(),
+                        //    Label = "Order-" + labelName,
+                        //    ProductId = 
 
-                            HttpResponseMessage response = await client.PostAsync(url, content);
+                        //};
 
-                            if (response.IsSuccessStatusCode)
-                            {
-                                string responseContent = await response.Content.ReadAsStringAsync();
-                                JsonDocument doc = JsonDocument.Parse(responseContent);
-                                JsonElement root = doc.RootElement;
-                                string orderId = root.GetProperty("id").GetString();
+                        var jsonOrder = JsonSerializer.Serialize(printifyOrderCreate);
+                        var content = new StringContent(jsonOrder, Encoding.UTF8, "application/json");
+                        var endpointUrl = "https://localhost:7065/api/Order/create-user-order";
+                        var response = await client.PostAsync(endpointUrl, content);
+                        var responseContent = await response.Content.ReadAsStringAsync();
 
-                                var newOrder = new Models.Order()
-                                {
-                                    OrderId = orderId,
-                                    UserEmail = userEmail,
-                                };
-
-                                await authDbContext.AddAsync(newOrder);
-                                await authDbContext.SaveChangesAsync();
-                            }
-                            else
-                            {
-                                // Log the response content when a 500 error occurs
-                                Console.WriteLine($"Failed to create order. Status code: {response.StatusCode}");
-                                string responseContent = await response.Content.ReadAsStringAsync();
-                                Console.WriteLine($"Response content: {responseContent}");
-                            }
-                        //}
+                        Console.WriteLine(responseContent);
 
                     }
                 }
@@ -456,6 +371,18 @@ namespace patchikatcha_backend.Controllers
             {
                 return BadRequest();
             }
+        }
+
+        [HttpPost]
+        [Route("intermediate-endpoint")]
+        public async Task<IActionResult> IntermediateWebhook([FromBody] PrintifyOrderCreateDto printifyOrder)
+        {
+            var jsonOrder = JsonSerializer.Serialize(printifyOrder);
+            var content = new StringContent(jsonOrder, Encoding.UTF8, "application/json");
+            var endpointUrl = "https://localhost:7065/api/Order/create-user-order";
+            var response = await client.PostAsync(endpointUrl, content);
+
+            return Ok("Did it work?");
         }
     }
 }

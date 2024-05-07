@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using patchikatcha_backend.Data;
 using patchikatcha_backend.DTO;
+using System.Text;
+using System.Text.Json;
 
 namespace patchikatcha_backend.Controllers
 {
@@ -34,7 +36,7 @@ namespace patchikatcha_backend.Controllers
                 return Ok(cachedResponse);
             }
 
-            var findOrders = authDbContext.Orders.Where(orders => orders.UserEmail  == userEmail).ToArray();
+            var findOrders = authDbContext.Orders.Where(orders => orders.UserEmail == userEmail).ToArray();
 
             if (findOrders == null)
             {
@@ -75,6 +77,42 @@ namespace patchikatcha_backend.Controllers
             var data = await response.Content.ReadAsStringAsync();
 
             return Ok(data);
+        }
+
+        [HttpPost]
+        [Route("create-user-order")]
+        public async Task<IActionResult> CreateUserOrder([FromBody] PrintifyOrderCreateDto printifyOrder)
+        {
+            var apiKey = configuration["PRINTIFY_API"];
+            var shopId = configuration["PRINTIFY_SHOP_ID"];
+
+            client.DefaultRequestHeaders.Add("Authorization", apiKey);
+
+            var jsonOrder = JsonSerializer.Serialize(printifyOrder);
+            var content = new StringContent(jsonOrder, Encoding.UTF8, "application/json");
+            var url = $"https://api.printify.com/v1/shops/{shopId}/orders.json";
+
+            HttpResponseMessage response = await client.PostAsync(url, content);
+            var responseContente = await response.Content.ReadAsStringAsync();
+
+            if (response.IsSuccessStatusCode)
+            {
+                string responseContent = await response.Content.ReadAsStringAsync();
+                JsonDocument doc = JsonDocument.Parse(responseContent);
+                JsonElement root = doc.RootElement;
+                string orderId = root.GetProperty("id").GetString();
+
+                var newOrder = new Models.Order()
+                {
+                    OrderId = orderId,
+                    UserEmail = printifyOrder.address_to.email,
+                };
+
+                await authDbContext.AddAsync(newOrder);
+                await authDbContext.SaveChangesAsync();
+            }
+
+            return Ok(responseContente);
         }
     }
 }
