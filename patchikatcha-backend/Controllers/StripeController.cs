@@ -246,6 +246,11 @@ namespace patchikatcha_backend.Controllers
         [Route("webhook-payment-completed")]
         public async Task<IActionResult> WebhookPaymentCollected()
         {
+            var apiKey = configuration["PRINTIFY_API"];
+            var shopId = configuration["PRINTIFY_SHOP_ID"];
+
+            client.DefaultRequestHeaders.Add("Authorization", apiKey);
+
             const string endpointSecret = "whsec_34670d831291649de50799b6d4a8d94cb1a4610fcc6f211436c25a53e2ad1947";
 
             var json = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
@@ -262,6 +267,8 @@ namespace patchikatcha_backend.Controllers
                     {
                         var session = eventData.Object as Session;
                         string sessionId = session.Id;
+
+
 
                             // Make an additional API call to retrieve the expanded Checkout Session object
                         var options = new SessionGetOptions { Expand = new List<string> { "line_items", "customer" } };
@@ -318,8 +325,10 @@ namespace patchikatcha_backend.Controllers
                             fullName = fullName,
                         };
 
+
+
                         var sortedMetadata = metaData.Reverse();
-                        var metaDataEnumerator = sortedMetadata.GetEnumerator();
+                        var metaDataEnumerator = metaData.GetEnumerator();
                         foreach (var item in lineItems)
                         {
                             // Move to the next metadata entry
@@ -340,23 +349,27 @@ namespace patchikatcha_backend.Controllers
                             printifyOrderCreate.line_items.Add(lineItem);
                         }
 
-                        //var createOrderDb = new Models.Order
-                        //{
-                        //    UserEmail = userEmail,
-                        //    ExternalId = Guid.NewGuid().ToString(),
-                        //    Label = "Order-" + labelName,
-                        //    ProductId = 
-
-                        //};
-
                         var jsonOrder = JsonSerializer.Serialize(printifyOrderCreate);
                         var content = new StringContent(jsonOrder, Encoding.UTF8, "application/json");
-                        var endpointUrl = "https://localhost:7065/api/Order/create-user-order";
-                        var response = await client.PostAsync(endpointUrl, content);
-                        var responseContent = await response.Content.ReadAsStringAsync();
+                        var url = $"https://api.printify.com/v1/shops/{shopId}/orders.json";
+                        var response = await client.PostAsync(url, content);
 
-                        Console.WriteLine(responseContent);
+                        if (response.IsSuccessStatusCode)
+                        {
+                            string responseContent = await response.Content.ReadAsStringAsync();
+                            JsonDocument doc = JsonDocument.Parse(responseContent);
+                            JsonElement root = doc.RootElement;
+                            string orderId = root.GetProperty("id").GetString();
 
+                            var newOrder = new Models.Order()
+                            {
+                                OrderId = orderId,
+                                UserEmail = printifyOrderCreate.address_to.email,
+                            };
+
+                            await authDbContext.AddAsync(newOrder);
+                            await authDbContext.SaveChangesAsync();
+                        }
                     }
                 }
                 // ... handle other event types

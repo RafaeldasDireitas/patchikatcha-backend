@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using patchikatcha_backend.BackgroundServices;
 using patchikatcha_backend.Data;
 using patchikatcha_backend.Models;
 using patchikatcha_backend.Repositories;
@@ -70,8 +69,6 @@ builder.Services.Configure<IdentityOptions>(options =>
 });
 
 builder.Services.AddHttpClient();
-
-builder.Services.AddHostedService<ProcessOrders>();
 
 builder.Services.AddScoped<IToken, Token>();
 

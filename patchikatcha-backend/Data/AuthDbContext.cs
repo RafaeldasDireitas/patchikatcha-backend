@@ -15,7 +15,6 @@ public partial class AuthDbContext : IdentityDbContext<ApplicationUser>
 
     public DbSet<Cart> Carts { get; set; }
     public DbSet<Order> Orders { get; set; }
-    public DbSet<LineItem> LineItems { get; set; }
     public DbSet<Wishlist> Wishlists { get; set; }
     public DbSet<Review> Reviews { get; set; } 
 
