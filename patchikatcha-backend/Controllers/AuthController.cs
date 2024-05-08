@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using patchikatcha_backend.Data;
 using patchikatcha_backend.DTO;
 using patchikatcha_backend.Models;
@@ -22,13 +23,15 @@ namespace patchikatcha_backend.Controllers
         private readonly IToken tokenRepository;
         private readonly AuthDbContext authDbContext;
         private readonly HttpClient client;
+        private readonly IMemoryCache memoryCache;
 
-        public AuthController(UserManager<ApplicationUser> userManager, IToken tokenRepository, AuthDbContext authDbContext, HttpClient client)
+        public AuthController(UserManager<ApplicationUser> userManager, IToken tokenRepository, AuthDbContext authDbContext, HttpClient client, IMemoryCache memoryCache)
         {
             this.userManager = userManager;
             this.tokenRepository = tokenRepository;
             this.authDbContext = authDbContext;
             this.client = client;
+            this.memoryCache = memoryCache;
         }
 
         
@@ -234,23 +237,24 @@ namespace patchikatcha_backend.Controllers
 
         [HttpGet]
         [Route("is-email-confirmed")]
-        public async Task<IActionResult> IsEmailConfirmed(string email)
+        public async Task<IActionResult> IsEmailConfirmed(string userId)
         {
-            var userEmail = await userManager.FindByEmailAsync(email);
+            var findUser = await userManager.FindByIdAsync(userId);
 
-            if (userEmail == null)
+            if (findUser == null)
             {
-                return BadRequest("No email was found");
+                return BadRequest("No user was found");
             }
 
-            var confirmEmail = await userManager.IsEmailConfirmedAsync(userEmail);
+            var confirmEmail = await userManager.IsEmailConfirmedAsync(findUser);
 
             if (!confirmEmail)
             {
-                return BadRequest("Your email isn't confirmed!");
+                return BadRequest(new { message = "Your email isn't confirmed!" });
             }
 
-            return Ok("Email is confirmed");
+
+            return Ok(new { message = "Email is confirmed" });
         }
 
         [HttpGet]

@@ -325,9 +325,6 @@ namespace patchikatcha_backend.Controllers
                             fullName = fullName,
                         };
 
-
-
-                        var sortedMetadata = metaData.Reverse();
                         var metaDataEnumerator = metaData.GetEnumerator();
                         foreach (var item in lineItems)
                         {

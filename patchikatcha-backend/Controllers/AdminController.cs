@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
+using patchikatcha_backend.Models;
 using System.Text;
 using System.Text.Json;
 
@@ -12,12 +14,14 @@ namespace patchikatcha_backend.Controllers
     public class AdminController : ControllerBase
     {
         private readonly HttpClient client;
+        private readonly UserManager<ApplicationUser> userManager;
         private readonly IConfiguration configuration;
         public readonly IMemoryCache memoryCache;
 
-        public AdminController(HttpClient client, IConfiguration configuration, IMemoryCache memoryCache)
+        public AdminController(HttpClient client, UserManager<ApplicationUser> userManager, IConfiguration configuration, IMemoryCache memoryCache)
         {
             this.client = client;
+            this.userManager = userManager;
             this.configuration = configuration;
             this.memoryCache = memoryCache;
         }
@@ -54,6 +58,23 @@ namespace patchikatcha_backend.Controllers
             }
 
             return Ok("Product published");
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Admin")]
+        [Route("grab-user-reviews")]
+        public async Task<IActionResult> GrabOrder(string userId)
+        {
+            var findUser = await userManager.FindByIdAsync(userId);
+
+            if (findUser == null)
+            {
+                return BadRequest("No user found");
+            }
+
+            var userReviews = findUser.Review.Where(review => review.ApplicationUserId == userId).ToList();
+
+            return Ok(userReviews);
         }
     }
 }
