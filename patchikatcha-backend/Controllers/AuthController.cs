@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.IdentityModel.Tokens;
 using patchikatcha_backend.Data;
 using patchikatcha_backend.DTO;
 using patchikatcha_backend.Models;
@@ -52,6 +53,7 @@ namespace patchikatcha_backend.Controllers
                 Email = registerDto.Email,
                 UserName = registerDto.Username,
                 UserCurrency = "EUR",
+                UserCountry = registerDto.UserCountry,
             };
 
             var identityResult = await userManager.CreateAsync(applicationUser, registerDto.Password);
