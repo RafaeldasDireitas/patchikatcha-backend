@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using patchikatcha_backend.Data;
+using patchikatcha_backend.DTO;
 using patchikatcha_backend.Models;
 using System.Text;
 using System.Text.Json;
@@ -79,6 +80,34 @@ namespace patchikatcha_backend.Controllers
             var userReviews = findUser.Review.Where(review => review.ApplicationUserId == userId).ToList();
 
             return Ok(userReviews);
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        [Route("create-product-in-db")]
+        public async Task<IActionResult> CreateProductInDb(DbProductDto dbProductDto)
+        {
+            var findProduct = await authDbContext.Products.FirstOrDefaultAsync(product => product.ProductId == dbProductDto.ProductId);
+
+            if (findProduct != null)
+            {
+                return BadRequest(new { message = "Product already exists" });
+            }
+
+            var newProduct = new Product
+            {
+                Title = dbProductDto.Title,
+                ProductId = dbProductDto.ProductId,
+                Tags = dbProductDto.Tags[0],
+                Price = dbProductDto.Price,
+                Purchases = dbProductDto.Purchases,
+                Image = dbProductDto.Image
+            };
+
+            await authDbContext.Products.AddAsync(newProduct);
+            await authDbContext.SaveChangesAsync();
+
+            return Ok("");
         }
     }
 }

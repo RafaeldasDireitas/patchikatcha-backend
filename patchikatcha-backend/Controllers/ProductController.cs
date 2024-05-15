@@ -142,5 +142,21 @@ namespace patchikatcha_backend.Controllers
 
             return Ok(findBestSellers);
         }
+
+        [HttpGet]
+        [Route("recommended-products")]
+        public async Task<IActionResult> RecommendedProducts(string tag)
+        {
+            if (memoryCache.TryGetValue(tag, out string cachedResponse))
+            {
+                return Ok(cachedResponse);
+            }
+
+            var findRecommendedProducts = await authDbContext.Products.Where(product => product.Tags == tag).OrderBy(x => Guid.NewGuid()).Take(4).ToListAsync();
+
+            memoryCache.Set(tag, findRecommendedProducts, TimeSpan.FromMinutes(1));
+
+            return Ok(findRecommendedProducts);
+        }
     }
 }
