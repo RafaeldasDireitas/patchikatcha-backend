@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using patchikatcha_backend.Data;
 using patchikatcha_backend.DTO;
 using System.Collections.Generic;
 using System.Text;
@@ -15,12 +17,14 @@ namespace patchikatcha_backend.Controllers
         private readonly HttpClient client;
         private readonly IConfiguration configuration;
         public readonly IMemoryCache memoryCache;
+        private readonly AuthDbContext authDbContext;
 
-        public ProductController(HttpClient client, IConfiguration configuration, IMemoryCache memoryCache)
+        public ProductController(HttpClient client, IConfiguration configuration, IMemoryCache memoryCache, AuthDbContext authDbContext)
         {
             this.client = client;
             this.configuration = configuration;
             this.memoryCache = memoryCache;
+            this.authDbContext = authDbContext;
         }
 
         // GET: ProductController
@@ -128,6 +132,15 @@ namespace patchikatcha_backend.Controllers
             memoryCache.Set(productId, jsonProduct, TimeSpan.FromMinutes(1));
 
             return Ok(jsonProduct);
+        }
+
+        [HttpGet]
+        [Route("grab-best-sellers")]
+        public async Task<IActionResult> GrabBestSellers()
+        {
+            var findBestSellers = await authDbContext.Products.OrderByDescending(product => product.Purchases).ToListAsync();
+
+            return Ok(findBestSellers);
         }
     }
 }

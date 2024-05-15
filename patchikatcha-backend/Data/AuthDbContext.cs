@@ -17,6 +17,7 @@ public partial class AuthDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Order> Orders { get; set; }
     public DbSet<Wishlist> Wishlists { get; set; }
     public DbSet<Review> Reviews { get; set; } 
+    public DbSet<Product> Products { get; set; } //for best seller area
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

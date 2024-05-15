@@ -364,7 +364,14 @@ namespace patchikatcha_backend.Controllers
                                 UserEmail = printifyOrderCreate.address_to.email,
                             };
 
-                            await authDbContext.AddAsync(newOrder);
+                            foreach (var item in lineItems)
+                            {
+                                var findProduct = await authDbContext.Products.FirstOrDefaultAsync(product => product.ProductId == item.Price.LookupKey);
+
+                                findProduct.Purchases = findProduct.Purchases + 1;
+                            }
+
+                            await authDbContext.Orders.AddAsync(newOrder);
                             await authDbContext.SaveChangesAsync();
                         }
                     }
@@ -381,18 +388,6 @@ namespace patchikatcha_backend.Controllers
             {
                 return BadRequest();
             }
-        }
-
-        [HttpPost]
-        [Route("intermediate-endpoint")]
-        public async Task<IActionResult> IntermediateWebhook([FromBody] PrintifyOrderCreateDto printifyOrder)
-        {
-            var jsonOrder = JsonSerializer.Serialize(printifyOrder);
-            var content = new StringContent(jsonOrder, Encoding.UTF8, "application/json");
-            var endpointUrl = "https://localhost:7065/api/Order/create-user-order";
-            var response = await client.PostAsync(endpointUrl, content);
-
-            return Ok("Did it work?");
         }
     }
 }

@@ -2,7 +2,9 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using patchikatcha_backend.Data;
 using patchikatcha_backend.Models;
 using System.Text;
 using System.Text.Json;
@@ -17,13 +19,15 @@ namespace patchikatcha_backend.Controllers
         private readonly UserManager<ApplicationUser> userManager;
         private readonly IConfiguration configuration;
         public readonly IMemoryCache memoryCache;
+        private readonly AuthDbContext authDbContext;
 
-        public AdminController(HttpClient client, UserManager<ApplicationUser> userManager, IConfiguration configuration, IMemoryCache memoryCache)
+        public AdminController(HttpClient client, UserManager<ApplicationUser> userManager, IConfiguration configuration, IMemoryCache memoryCache, AuthDbContext authDbContext)
         {
             this.client = client;
             this.userManager = userManager;
             this.configuration = configuration;
             this.memoryCache = memoryCache;
+            this.authDbContext = authDbContext;
         }
 
         [HttpPost]
