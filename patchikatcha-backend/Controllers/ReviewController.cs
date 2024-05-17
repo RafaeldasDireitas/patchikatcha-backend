@@ -91,6 +91,7 @@ namespace patchikatcha_backend.Controllers
             var createReview = new Review
             {
                 ProductId = review.ProductId,
+                ProductTitle = review.ProductTitle,
                 Title = review.Title,
                 ApplicationUserId = review.ApplicationUserId,
                 Comment = review.Comment,
@@ -111,22 +112,22 @@ namespace patchikatcha_backend.Controllers
         {
             var findUser = await userManager.FindByIdAsync(userId);
 
-            if (findUser != null)
+            if (findUser == null)
             {
-                var findReview = await authDbContext.Reviews.FirstOrDefaultAsync(review =>  review.ApplicationUserId == userId && review.Id == Id);
-
-                if (findReview != null)
-                {
-                    authDbContext.Reviews.Remove(findReview);
-                    await authDbContext.SaveChangesAsync();
-
-                    return Ok(new { message = "Review removed" });
-                }
-
-                return BadRequest("No review found");
+                return BadRequest(new { message = "No user found" });
             }
 
-            return BadRequest("No user found");
+            var findReview = await authDbContext.Reviews.FirstOrDefaultAsync(review =>  review.ApplicationUserId == userId && review.Id == Id);
+
+            if (findReview == null)
+            {
+                return BadRequest(new { message = "No review found" });
+            }
+
+            authDbContext.Reviews.Remove(findReview);
+            await authDbContext.SaveChangesAsync();
+
+            return Ok(new { message = "Review removed" });
         }
     }
 }
