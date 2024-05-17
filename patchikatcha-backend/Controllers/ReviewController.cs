@@ -59,7 +59,15 @@ namespace patchikatcha_backend.Controllers
 
             if (findUser != null)
             {
-                var userReviews = authDbContext.Reviews.Where(review => review.ApplicationUserId == userId).ToList();
+                var userReviews = await authDbContext.Reviews.Where(review => review.ApplicationUserId == userId).Select(review => new
+                {
+                    review.Id,
+                    review.Title,
+                    review.Comment,
+                    review.Rating,
+                    review.CreatedAt,
+                    Username = review.ApplicationUser.UserName,
+                }).ToListAsync();
 
                 return Ok(userReviews);
             }
@@ -112,7 +120,7 @@ namespace patchikatcha_backend.Controllers
                     authDbContext.Reviews.Remove(findReview);
                     await authDbContext.SaveChangesAsync();
 
-                    return Ok("Review removed");
+                    return Ok(new { message = "Review removed" });
                 }
 
                 return BadRequest("No review found");
