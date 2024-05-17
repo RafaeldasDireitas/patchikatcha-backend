@@ -111,6 +111,30 @@ namespace patchikatcha_backend.Controllers
             return Ok(tokenResponse);
         }
 
+        [HttpDelete]
+        [Authorize]
+        [Route("delete-account")]
+        public async Task<IActionResult> DeleteAccount(string userId, string password)
+        {
+            var findUser = await userManager.FindByIdAsync(userId);
+
+            if (findUser == null)
+            {
+                return BadRequest(new { message = "No user found" });
+            } 
+
+            var checkPassword = await userManager.CheckPasswordAsync(findUser, password);
+
+            if (checkPassword == false)
+            {
+                return BadRequest(new { message = "Your credentials don't match" });
+            }
+
+            var deleteUser = await userManager.DeleteAsync(findUser);
+
+            return Ok("Account deleted");
+        }
+
         [HttpGet] // Use HttpGet attribute for GoogleRequest method
         [Route("google-request")]
         public async Task<string> GoogleRequest(string apiKey)
