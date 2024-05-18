@@ -10,6 +10,7 @@ namespace patchikatcha_backend.Models
         public required string Title { get; set; }
         public required string ProductId { get; set; }
         public string ProductTitle { get; set; }
+        public string ProductImage { get; set; }
         public string ApplicationUserId { get; set; }
         [JsonIgnore]
         public ApplicationUser ApplicationUser { get; set; }

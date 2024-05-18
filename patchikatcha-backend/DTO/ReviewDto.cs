@@ -8,6 +8,7 @@ namespace patchikatcha_backend.DTO
         public required string Title { get; set; }
         public required string ProductId { get; set; }
         public string ProductTitle { get; set; }
+        public string ProductImage { get; set; }
         public required string ApplicationUserId { get; set; }
         public string Comment { get; set; }
         public int Rating { get; set; }

@@ -63,6 +63,7 @@ namespace patchikatcha_backend.Controllers
                 {
                     review.Id,
                     review.Title,
+                    review.ProductImage,
                     review.Comment,
                     review.Rating,
                     review.CreatedAt,
@@ -92,6 +93,7 @@ namespace patchikatcha_backend.Controllers
             {
                 ProductId = review.ProductId,
                 ProductTitle = review.ProductTitle,
+                ProductImage = review.ProductImage,
                 Title = review.Title,
                 ApplicationUserId = review.ApplicationUserId,
                 Comment = review.Comment,
