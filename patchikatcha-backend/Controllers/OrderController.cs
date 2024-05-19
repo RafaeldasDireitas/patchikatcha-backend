@@ -50,7 +50,7 @@ namespace patchikatcha_backend.Controllers
                 idList.Add(new GrabUserOrdersDto { OrderId = item.OrderId });
             }
 
-            memoryCache.Set(userEmail, idList, TimeSpan.FromMinutes(30));
+            memoryCache.Set(userEmail, idList, TimeSpan.FromMinutes(10));
 
             return Ok(idList);
         }
