@@ -109,5 +109,35 @@ namespace patchikatcha_backend.Controllers
 
             return Ok("");
         }
+
+        [HttpPut]
+        [Authorize(Roles = "Admin")]
+        [Route("change-product-tag")]
+        public async Task<IActionResult> ChangeProductTag(string productId, [FromBody] string tag)
+        {
+            var apiKey = configuration["PRINTIFY_API"];
+            var shopId = configuration["PRINTIFY_SHOP_ID"];
+
+            client.DefaultRequestHeaders.Add("Authorization", apiKey);
+
+            var url = $"https://api.printify.com/v1/shops/{shopId}/products/{productId}.json";
+
+            var productTag = new
+            {
+                tags = new[] { tag }
+            };
+
+            var jsonDataBody = JsonSerializer.Serialize(productTag);
+            var content = new StringContent(jsonDataBody, Encoding.UTF8, "application/json");
+
+            HttpResponseMessage response = await client.PutAsync(url, content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                return Ok(new { message = "Product tag was updated" });
+            }
+
+            return BadRequest(new { message = "There was an error updating product tag" });
+        }
     }
 }

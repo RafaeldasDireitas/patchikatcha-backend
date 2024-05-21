@@ -20,7 +20,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: MyAllowSpecificOrigins,
         policy =>
         {
-            policy.WithOrigins("http://localhost:3000").AllowAnyHeader().AllowAnyMethod().AllowCredentials();
+            policy.WithOrigins("https://patchikatcha-frontend.vercel.app", "http://localhost:3000").AllowAnyHeader().AllowAnyMethod().AllowCredentials();
         });
 });
 builder.Services.AddMemoryCache();
