@@ -55,32 +55,21 @@ namespace patchikatcha_backend.Controllers
 
         [HttpGet]
         [Route("grab-category-products")]
-        public async Task<IActionResult> GrabCategoryProducts(string categoryName)
+        public async Task<IActionResult> GrabCategoryProducts(string categoryName, int page)
         {
             if (memoryCache.TryGetValue(categoryName, out ProductCategoryDto products))
             {
                 return Ok(products);
             }
 
-            var apiKey = configuration["PRINTIFY_API"];
-            var shopId = configuration["PRINTIFY_SHOP_ID"];
+            var totalProducts = await authDbContext.Products.Where(product => product.Tag == categoryName || product.CategoryTag == categoryName).CountAsync();
+            int totalPages = (int)Math.Ceiling((double)totalProducts / 6);
 
-            client.DefaultRequestHeaders.Add("Authorization", apiKey);
+            var findCategoryProducts = await authDbContext.Products.Where(product => product.Tag == categoryName || product.CategoryTag == categoryName).Skip(page * 6).Take(6).ToListAsync();
 
-            string url = $"https://api.printify.com/v1/shops/{shopId}/products.json";
+            memoryCache.Set(categoryName, findCategoryProducts, TimeSpan.FromSeconds(60));
 
-            HttpResponseMessage response = await client.GetAsync(url);
-
-            string jsonResponse = await response.Content.ReadAsStringAsync();
-
-            ProductCategoryDto productCategory = JsonSerializer.Deserialize<ProductCategoryDto>(jsonResponse);
-
-            var findProducts = productCategory.Data.Where(product => product.Tags.Contains($"{categoryName}")).ToList();
-            var jsonContent = JsonSerializer.Serialize(findProducts);
-
-            memoryCache.Set(categoryName, jsonContent, TimeSpan.FromSeconds(60));
-
-            return Ok(jsonContent);
+            return Ok(new { categoryProducts = findCategoryProducts, totalPages = totalPages });
 
         }
 
@@ -152,7 +141,7 @@ namespace patchikatcha_backend.Controllers
                 return Ok(cachedResponse);
             }
 
-            var findRecommendedProducts = await authDbContext.Products.Where(product => product.Tags == tag).OrderBy(x => Guid.NewGuid()).Take(4).ToListAsync();
+            var findRecommendedProducts = await authDbContext.Products.Where(product => product.Tag == tag).OrderBy(x => Guid.NewGuid()).Take(4).ToListAsync();
 
             memoryCache.Set(tag, findRecommendedProducts, TimeSpan.FromMinutes(1));
 

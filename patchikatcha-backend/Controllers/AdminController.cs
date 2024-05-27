@@ -98,7 +98,8 @@ namespace patchikatcha_backend.Controllers
             {
                 Title = dbProductDto.Title,
                 ProductId = dbProductDto.ProductId,
-                Tags = dbProductDto.Tags,
+                Tag = dbProductDto.Tag,
+                CategoryTag = dbProductDto.CategoryTag,
                 Price = dbProductDto.Price,
                 Purchases = dbProductDto.Purchases,
                 Image = dbProductDto.Image
