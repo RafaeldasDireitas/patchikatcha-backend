@@ -12,15 +12,15 @@ using patchikatcha_backend.Data;
 namespace patchikatcha_backend.Migrations
 {
     [DbContext(typeof(AuthDbContext))]
-    [Migration("20240422205131_WishlistAdded")]
-    partial class WishlistAdded
+    [Migration("20240531153724_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.2")
+                .HasAnnotation("ProductVersion", "8.0.6")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -224,6 +224,9 @@ namespace patchikatcha_backend.Migrations
                     b.Property<string>("UserCountry")
                         .HasColumnType("text");
 
+                    b.Property<string>("UserCurrency")
+                        .HasColumnType("text");
+
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
@@ -261,12 +264,8 @@ namespace patchikatcha_backend.Migrations
                     b.Property<int>("BlueprintId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("Color")
+                    b.Property<int?>("Color")
                         .HasColumnType("integer");
-
-                    b.Property<string>("Currency")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -300,12 +299,8 @@ namespace patchikatcha_backend.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("integer");
 
-                    b.Property<int>("Size")
+                    b.Property<int?>("Size")
                         .HasColumnType("integer");
-
-                    b.Property<string>("UserCountry")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.Property<int>("VariantId")
                         .HasColumnType("integer");
@@ -338,6 +333,94 @@ namespace patchikatcha_backend.Migrations
                     b.ToTable("Orders");
                 });
 
+            modelBuilder.Entity("patchikatcha_backend.Models.Product", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CategoryTag")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Image")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Price")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ProductId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Purchases")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SecondImage")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Tag")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Products");
+                });
+
+            modelBuilder.Entity("patchikatcha_backend.Models.Review", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ApplicationUserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Comment")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ProductId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ProductImage")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ProductTitle")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationUserId");
+
+                    b.ToTable("Reviews");
+                });
+
             modelBuilder.Entity("patchikatcha_backend.Models.Wishlist", b =>
                 {
                     b.Property<int>("Id")
@@ -357,6 +440,10 @@ namespace patchikatcha_backend.Migrations
                     b.Property<float>("Price")
                         .HasColumnType("real");
 
+                    b.Property<string>("ProductId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("text");
@@ -365,7 +452,7 @@ namespace patchikatcha_backend.Migrations
 
                     b.HasIndex("ApplicationUserId");
 
-                    b.ToTable("Wishlist");
+                    b.ToTable("Wishlists");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -430,6 +517,17 @@ namespace patchikatcha_backend.Migrations
                     b.Navigation("ApplicationUser");
                 });
 
+            modelBuilder.Entity("patchikatcha_backend.Models.Review", b =>
+                {
+                    b.HasOne("patchikatcha_backend.Models.ApplicationUser", "ApplicationUser")
+                        .WithMany("Review")
+                        .HasForeignKey("ApplicationUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ApplicationUser");
+                });
+
             modelBuilder.Entity("patchikatcha_backend.Models.Wishlist", b =>
                 {
                     b.HasOne("patchikatcha_backend.Models.ApplicationUser", "ApplicationUser")
@@ -444,6 +542,8 @@ namespace patchikatcha_backend.Migrations
             modelBuilder.Entity("patchikatcha_backend.Models.ApplicationUser", b =>
                 {
                     b.Navigation("Cart");
+
+                    b.Navigation("Review");
 
                     b.Navigation("Wishlist");
                 });

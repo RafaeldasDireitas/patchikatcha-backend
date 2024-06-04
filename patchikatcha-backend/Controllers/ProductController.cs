@@ -37,20 +37,23 @@ namespace patchikatcha_backend.Controllers
             var shopId = configuration["PRINTIFY_SHOP_ID"];
             int limit = 8;
 
-            client.DefaultRequestHeaders.Add("Authorization", apiKey);
+            var findNewProducts = await authDbContext.Products.OrderByDescending(product => product.Id).Take(limit).ToListAsync();
 
-            string url = $"https://api.printify.com/v1/shops/{shopId}/products.json?limit={limit}";
+            return Ok(findNewProducts);
+        }
 
-            HttpResponseMessage response = await client.GetAsync(url);
+        [HttpGet]
+        [Route("grab-product-id")]
+        public async Task<IActionResult> GrabProductId(string productTitle)
+        {
+            var findProduct = await authDbContext.Products.FirstOrDefaultAsync(product => product.Title == productTitle);
 
-            if (!response.IsSuccessStatusCode)
+            if (findProduct == null)
             {
-                return BadRequest();
+                return BadRequest("No product found");
             }
 
-            string jsonResponse = await response.Content.ReadAsStringAsync();
-
-            return Ok(jsonResponse);
+            return Ok(findProduct.ProductId);
         }
 
         [HttpGet]
@@ -127,7 +130,7 @@ namespace patchikatcha_backend.Controllers
         [Route("grab-best-sellers")]
         public async Task<IActionResult> GrabBestSellers()
         {
-            var findBestSellers = await authDbContext.Products.OrderByDescending(product => product.Purchases).ToListAsync();
+            var findBestSellers = await authDbContext.Products.OrderByDescending(product => product.Purchases).Take(8).ToListAsync();
 
             return Ok(findBestSellers);
         }

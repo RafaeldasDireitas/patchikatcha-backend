@@ -12,6 +12,7 @@ using patchikatcha_backend.Repositories;
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
 var builder = WebApplication.CreateBuilder(args);
+var environment = builder.Environment.EnvironmentName;
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -20,7 +21,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: MyAllowSpecificOrigins,
         policy =>
         {
-            policy.WithOrigins("https://patchikatcha.com", "http://localhost:3000").AllowAnyHeader().AllowAnyMethod().AllowCredentials();
+            policy.WithOrigins("https://patchikatcha.com", "http://localhost:3000", "https://stripe.com").AllowAnyHeader().AllowAnyMethod().AllowCredentials();
         });
 });
 builder.Services.AddMemoryCache();

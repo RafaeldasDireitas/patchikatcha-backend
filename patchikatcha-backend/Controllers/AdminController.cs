@@ -48,7 +48,7 @@ namespace patchikatcha_backend.Controllers
                 external = new
                 {
                     id = productId,
-                    handle = "http://localhost:3000",
+                    handle = "https://patchikatcha.com",
                 }
             };
 

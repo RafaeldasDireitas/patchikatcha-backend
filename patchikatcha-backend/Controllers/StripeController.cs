@@ -41,7 +41,7 @@ namespace patchikatcha_backend.Controllers
         public StripeController(HttpClient client, IConfiguration configuration, AuthDbContext authDbContext, UserManager<ApplicationUser> userManager, IMemoryCache memoryCache)
         {
 
-            StripeConfiguration.ApiKey = "sk_test_51Onkz6Lwv2BbZpNwYDF8RzBVcmiQAZ59EeoWeBEYD3WJTRmhakFtyUR1tAJcCp4Vrr9mKhxzJARNA0rEPyfyofWV00cISXaGE8";
+            StripeConfiguration.ApiKey = "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";
             this.client = client;
             this.configuration = configuration;
             this.authDbContext = authDbContext;
@@ -77,7 +77,7 @@ namespace patchikatcha_backend.Controllers
                     }
                 }
 
-                var domain = "http://localhost:3000/checkout/order-successful";
+                var domain = "https://patchikatcha.com/checkout/order-successful";
 
                 var customerService = new CustomerService();
                 var existingCustomers = customerService.ListAutoPaging(new CustomerListOptions { Email = findUser.Email });

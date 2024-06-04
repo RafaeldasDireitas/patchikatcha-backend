@@ -42,10 +42,16 @@ namespace patchikatcha_backend.Controllers
         public async Task<IActionResult> Register([FromBody] RegisterDto registerDto)
         {
             var findUser = await userManager.FindByEmailAsync(registerDto.Email);
+            var findUsername = await userManager.FindByNameAsync(registerDto.Username);
 
             if (findUser != null)
             {
                 return BadRequest(new { message = "This email is already registered" });
+            }
+
+            if (findUsername != null)
+            {
+                return BadRequest(new { message = "This username is already taken" });
             }
 
             string responseBody = await GoogleRequest(registerDto.ApiKey);
