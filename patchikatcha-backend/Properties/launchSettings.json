@@ -16,7 +16,7 @@
       "launchUrl": "swagger",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "PRINTIFY_API": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIzN2Q0YmQzMDM1ZmUxMWU5YTgwM2FiN2VlYjNjY2M5NyIsImp0aSI6IjcxNmRjNzdmZTMwZTFiZTAyZTdkZDMwZDRiZWU0YzQ2ZmVjMDlkNTU4ZDYwOWE2MWI4MTI1OWExZjg0NDBiZThlMTY1NTA3OTg3MGE3MDVmIiwiaWF0IjoxNzA4MzQwNjY3LjgwNDY1OCwibmJmIjoxNzA4MzQwNjY3LjgwNDY2LCJleHAiOjE3Mzk5NjMwNjcuNzk0MzY4LCJzdWIiOiIxNzE0MDc5MCIsInNjb3BlcyI6WyJzaG9wcy5tYW5hZ2UiLCJzaG9wcy5yZWFkIiwiY2F0YWxvZy5yZWFkIiwib3JkZXJzLnJlYWQiLCJvcmRlcnMud3JpdGUiLCJwcm9kdWN0cy5yZWFkIiwicHJvZHVjdHMud3JpdGUiLCJ3ZWJob29rcy5yZWFkIiwid2ViaG9va3Mud3JpdGUiLCJ1cGxvYWRzLnJlYWQiLCJ1cGxvYWRzLndyaXRlIiwicHJpbnRfcHJvdmlkZXJzLnJlYWQiXX0.AHXC4NtWwKIhRY3cAuW_kdnCJ1tHARlgMhL4Km1fcifnA1PlYSWlGjn7eEASseS9eEd38mJOBkqEKc7wMHg",
+        "PRINTIFY_API": $"Bearer {PRINTIFY_KEY}",
         "PRINTIFY_SHOP_ID": "14479257",
         "Authentication-Google-ClientId": "357729669937-tuqotrm3l30vmllndbvks70mg8hs1v5k.apps.googleusercontent.com",
         "Authentication-Google-ClientSecret": "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"
@@ -38,7 +38,7 @@
       "launchUrl": "swagger",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "ProductionEU",
-        "PRINTIFY_API": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIzN2Q0YmQzMDM1ZmUxMWU5YTgwM2FiN2VlYjNjY2M5NyIsImp0aSI6IjcxNmRjNzdmZTMwZTFiZTAyZTdkZDMwZDRiZWU0YzQ2ZmVjMDlkNTU4ZDYwOWE2MWI4MTI1OWExZjg0NDBiZThlMTY1NTA3OTg3MGE3MDVmIiwiaWF0IjoxNzA4MzQwNjY3LjgwNDY1OCwibmJmIjoxNzA4MzQwNjY3LjgwNDY2LCJleHAiOjE3Mzk5NjMwNjcuNzk0MzY4LCJzdWIiOiIxNzE0MDc5MCIsInNjb3BlcyI6WyJzaG9wcy5tYW5hZ2UiLCJzaG9wcy5yZWFkIiwiY2F0YWxvZy5yZWFkIiwib3JkZXJzLnJlYWQiLCJvcmRlcnMud3JpdGUiLCJwcm9kdWN0cy5yZWFkIiwicHJvZHVjdHMud3JpdGUiLCJ3ZWJob29rcy5yZWFkIiwid2ViaG9va3Mud3JpdGUiLCJ1cGxvYWRzLnJlYWQiLCJ1cGxvYWRzLndyaXRlIiwicHJpbnRfcHJvdmlkZXJzLnJlYWQiXX0.AHXC4NtWwKIhRY3cAuW_kdnCJ1tHARlgMhL4Km1fcifnA1PlYSWlGjn7eEASseS9eEd38mJOBkqEKc7wMHg",
+        "PRINTIFY_API": $"Bearer {PRINTIFY_KEY}",
         "PRINTIFY_SHOP_ID": "15838580",
         "Authentication-Google-ClientId": "357729669937-tuqotrm3l30vmllndbvks70mg8hs1v5k.apps.googleusercontent.com",
         "Authentication-Google-ClientSecret": "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"

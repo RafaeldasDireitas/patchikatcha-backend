@@ -42,7 +42,7 @@ namespace patchikatcha_backend.Controllers
 
         public StripeController(HttpClient client, IConfiguration configuration, AuthDbContext authDbContext, UserManager<ApplicationUser> userManager, IMemoryCache memoryCache)
         {
-            Env.Load();
+            
 
             StripeConfiguration.ApiKey = Environment.GetEnvironmentVariable("STRIPE_API_KEY");
             this.client = client;

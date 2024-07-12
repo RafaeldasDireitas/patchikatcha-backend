@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Text;
+using DotNetEnv;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +11,7 @@ using patchikatcha_backend.Models;
 using patchikatcha_backend.Repositories;
 
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 var environment = builder.Environment.EnvironmentName;
