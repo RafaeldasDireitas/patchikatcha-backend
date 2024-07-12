@@ -29,12 +29,10 @@ namespace patchikatcha_backend.Controllers
 
         // GET: ProductController
         [HttpGet]
-        [ResponseCache(Duration = 60)]
+        [ResponseCache(Duration = 10800)]
         [Route("new-products")]
         public async Task<ActionResult> GetNewProducts()
         {
-            var apiKey = configuration["PRINTIFY_API"];
-            var shopId = configuration["PRINTIFY_SHOP_ID"];
             int limit = 8;
 
             var findNewProducts = await authDbContext.Products.OrderByDescending(product => product.Id).Take(limit).ToListAsync();
@@ -70,7 +68,7 @@ namespace patchikatcha_backend.Controllers
 
             var findCategoryProducts = await authDbContext.Products.Where(product => product.Tag == categoryName || product.CategoryTag == categoryName).Skip(page * 6).Take(6).ToListAsync();
 
-            memoryCache.Set(categoryName, findCategoryProducts, TimeSpan.FromSeconds(60));
+            memoryCache.Set(categoryName, findCategoryProducts, TimeSpan.FromHours(3));
 
             return Ok(new { categoryProducts = findCategoryProducts, totalPages = totalPages });
 
@@ -121,16 +119,17 @@ namespace patchikatcha_backend.Controllers
             string responseData = await response.Content.ReadAsStringAsync();
             JsonDocument jsonProduct = JsonDocument.Parse(responseData);
 
-            memoryCache.Set(productId, jsonProduct, TimeSpan.FromMinutes(1));
+            memoryCache.Set(productId, jsonProduct, TimeSpan.FromHours(3));
 
             return Ok(jsonProduct);
         }
 
         [HttpGet]
+        [ResponseCache(Duration = 10800)]
         [Route("grab-best-sellers")]
         public async Task<IActionResult> GrabBestSellers()
         {
-            var findBestSellers = await authDbContext.Products.OrderByDescending(product => product.Purchases).Take(8).ToListAsync();
+            var findBestSellers = await authDbContext.Products.OrderByDescending(product => product.Purchases).Take(2).ToListAsync();
 
             return Ok(findBestSellers);
         }
@@ -146,7 +145,7 @@ namespace patchikatcha_backend.Controllers
 
             var findRecommendedProducts = await authDbContext.Products.Where(product => product.Tag == tag).OrderBy(x => Guid.NewGuid()).Take(4).ToListAsync();
 
-            memoryCache.Set(tag, findRecommendedProducts, TimeSpan.FromMinutes(1));
+            memoryCache.Set(tag, findRecommendedProducts, TimeSpan.FromMinutes(10));
 
             return Ok(findRecommendedProducts);
         }

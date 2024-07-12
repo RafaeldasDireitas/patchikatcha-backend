@@ -6,6 +6,7 @@ using System.Security.Policy;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using DotNetEnv;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -25,6 +26,7 @@ using Stripe;
 using Stripe.Checkout;
 using Stripe.Climate;
 using static System.Net.WebRequestMethods;
+using DotNetEnv;
 
 namespace patchikatcha_backend.Controllers
 {
@@ -40,8 +42,9 @@ namespace patchikatcha_backend.Controllers
 
         public StripeController(HttpClient client, IConfiguration configuration, AuthDbContext authDbContext, UserManager<ApplicationUser> userManager, IMemoryCache memoryCache)
         {
+            Env.Load();
 
-            StripeConfiguration.ApiKey = "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";
+            StripeConfiguration.ApiKey = Environment.GetEnvironmentVariable("STRIPE_API_KEY");
             this.client = client;
             this.configuration = configuration;
             this.authDbContext = authDbContext;

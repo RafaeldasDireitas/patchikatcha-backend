@@ -65,7 +65,7 @@ namespace patchikatcha_backend.Controllers
 
                 foreach (var item in cart)
                 {
-                    var url = $"https://localhost:7065/api/Blueprint/get-blueprint/{item.BlueprintId}/{item.PrintProviderId}";
+                    var url = $"https://api.patchikatcha.com/api/Blueprint/get-blueprint/{item.BlueprintId}/{item.PrintProviderId}";
 
                     HttpResponseMessage response = await client.GetAsync(url);
 
@@ -97,7 +97,7 @@ namespace patchikatcha_backend.Controllers
                                 PriceId = item.PriceId,
                                 Image = item.Image,
                                 Quantity = item.Quantity,
-                                Size = (int)item.Size,
+                                Size = item.Size != null ? (int)item.Size : null,
                                 Color = (int)item.Color,
                                 ProductId = item.ProductId,
                                 VariantId = item.VariantId,
@@ -219,7 +219,7 @@ namespace patchikatcha_backend.Controllers
 
                 foreach (var item in cartBlueprint)
                 {
-                    var url = $"https://localhost:7065/api/Blueprint/get-blueprint/{item.BlueprintId}/{item.PrintProviderId}";
+                    var url = $"https://api.patchikatcha.com/api/Blueprint/get-blueprint/{item.BlueprintId}/{item.PrintProviderId}";
 
                     HttpResponseMessage response = await client.GetAsync(url);
 
